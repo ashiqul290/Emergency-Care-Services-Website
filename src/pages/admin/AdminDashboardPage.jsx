@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAppData } from '../../context/useAppData.js'
 import { listingTypes } from '../../data/listingCategories.js'
 import BrandLogo from '../../components/BrandLogo.jsx'
+import AdminOperationsOverview from './AdminOperationsOverview.jsx'
+import EmergencyServiceManagement from './EmergencyServiceManagement.jsx'
 import './AdminDashboardPage.css'
 
 const adminSections = [
@@ -11,6 +13,7 @@ const adminSections = [
   { id: 'listings', label: 'তথ্য অনুমোদন', symbol: '▤', countKey: 'pendingListings' },
   { id: 'history', label: 'আবেদনের ইতিহাস', symbol: '◷', countKey: 'completedRequests' },
   { id: 'cities', label: 'শহর পরিচালনা', symbol: '⌖', countKey: 'cities' },
+  { id: 'emergency-services', label: 'জরুরি সেবা পরিচালনা', symbol: '☎', countKey: 'emergencyServices' },
   { id: 'published', label: 'প্রকাশিত তথ্য', symbol: '✓', countKey: 'approvedListings' },
 ]
 
@@ -20,8 +23,23 @@ function AdminDashboardPage() {
     cities,
     listings,
     requests,
+    emergencyServices,
+    managedAreas,
+    staffAccounts,
+    requestOperations,
+    hiddenEmergencyServiceIds,
     addCity,
     removeCity,
+    addManagedArea,
+    updateManagedArea,
+    removeManagedArea,
+    addStaffAccount,
+    removeStaffAccount,
+    hideEmergencyService,
+    restoreEmergencyService,
+    addEmergencyService,
+    updateEmergencyService,
+    removeEmergencyService,
     updateListingStatus,
     removeListing,
     updateRequestStatus,
@@ -66,6 +84,7 @@ function AdminDashboardPage() {
       pendingListings: pendingListings.length,
       completedRequests: completedRequests.length,
       cities: cities.length,
+      emergencyServices: emergencyServices.length,
       approvedListings: approvedListings.length,
     }
     return counts[key] ?? 0
@@ -100,8 +119,9 @@ function AdminDashboardPage() {
     if (
       listings.some((listing) => listing.cityId === city.id)
       || requests.some((request) => request.cityId === city.id)
+      || managedAreas.some((area) => area.cityId === city.id)
     ) {
-      setError('এই শহরের listing বা আবেদন আছে। আগে সেগুলো সরিয়ে নিন, তারপর শহর মুছুন।')
+      setError('এই শহরের listing, আবেদন বা পরিচালিত এলাকার তথ্য আছে। আগে সংশ্লিষ্ট তথ্য সরিয়ে নিন, তারপর শহর মুছুন।')
       setFeedback('')
       return
     }
@@ -343,6 +363,19 @@ function AdminDashboardPage() {
               </div>
             </section>
           </div>
+          <AdminOperationsOverview
+            addManagedArea={addManagedArea}
+            addStaffAccount={addStaffAccount}
+            cities={cities}
+            listings={listings}
+            managedAreas={managedAreas}
+            removeManagedArea={removeManagedArea}
+            removeStaffAccount={removeStaffAccount}
+            requestOperations={requestOperations}
+            requests={requests}
+            staffAccounts={staffAccounts}
+            updateManagedArea={updateManagedArea}
+          />
         </>
       )
     }
@@ -351,6 +384,19 @@ function AdminDashboardPage() {
     if (activeSection === 'listings') return renderListingCards(pendingListings)
     if (activeSection === 'history') return renderRequestCards(completedRequests, true)
     if (activeSection === 'cities') return renderCities()
+    if (activeSection === 'emergency-services') {
+      return (
+        <EmergencyServiceManagement
+          hiddenServiceIds={hiddenEmergencyServiceIds}
+          onAdd={addEmergencyService}
+          onHide={hideEmergencyService}
+          onRemove={removeEmergencyService}
+          onRestore={restoreEmergencyService}
+          onUpdate={updateEmergencyService}
+          services={emergencyServices}
+        />
+      )
+    }
     return renderListingCards(approvedListings, true)
   }
 
@@ -358,7 +404,7 @@ function AdminDashboardPage() {
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      <aside aria-label="অ্যাডমিন সাইডবার" className="admin-sidebar">
         <div className="admin-sidebar-brand">
           <BrandLogo subtitle="ADMIN PANEL" />
         </div>
@@ -380,11 +426,11 @@ function AdminDashboardPage() {
         </nav>
       </aside>
 
-      <main className="admin-workspace">
+      <section aria-labelledby="admin-title" className="admin-workspace">
         <header className="admin-workspace-header">
           <div>
             <span className="section-kicker">পরিচালনা / {activeSectionInfo?.label}</span>
-            <h1>{activeSectionInfo?.label}</h1>
+            <h1 id="admin-title">{activeSectionInfo?.label}</h1>
             <p>পণ্য, সেবা, আবেদন ও শহর পরিচালনা করুন।</p>
           </div>
           <div className="admin-header-actions">
@@ -407,6 +453,7 @@ function AdminDashboardPage() {
                 {activeSection === 'listings' && `${pendingListings.length}টি`}
                 {activeSection === 'history' && `${completedRequests.length}টি`}
                 {activeSection === 'cities' && `${cities.length}টি`}
+                {activeSection === 'emergency-services' && `${emergencyServices.length}টি`}
                 {activeSection === 'published' && `${approvedListings.length}টি`}
               </span>
             </div>
@@ -414,7 +461,7 @@ function AdminDashboardPage() {
           </section>
         )}
         {activeSection === 'overview' && renderSection()}
-      </main>
+      </section>
     </div>
   )
 }

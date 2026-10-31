@@ -243,19 +243,25 @@ function AddListingWizard({
   return (
     <div
       className="add-listing-overlay"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose()
+      }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
       <section
         aria-labelledby="add-listing-title"
+        aria-describedby="add-listing-description"
         aria-modal="true"
         className="add-listing-wizard"
+        id="add-listing-dialog"
         role="dialog"
       >
         <div className="wizard-grabber" aria-hidden="true" />
         <button
           aria-label="ফর্ম বন্ধ করুন"
+          autoFocus
           className="wizard-close"
           onClick={onClose}
           type="button"
@@ -266,7 +272,7 @@ function AddListingWizard({
         <header className="wizard-header">
           <span className="section-kicker">নতুন তথ্য যোগ করুন</span>
           <h2 id="add-listing-title">পণ্য / সেবা যোগ করুন</h2>
-          <p>৪টি সহজ ধাপে জমা দিন — অ্যাডমিন অনুমোদনের পর নির্বাচিত শহরে প্রকাশিত হবে</p>
+          <p id="add-listing-description">৪টি সহজ ধাপে জমা দিন — অ্যাডমিন অনুমোদনের পর নির্বাচিত শহরে প্রকাশিত হবে</p>
         </header>
 
         <div aria-label={`ধাপ ${step} / ৪`} className="wizard-progress">

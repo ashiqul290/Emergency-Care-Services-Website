@@ -17,8 +17,9 @@ function App() {
 
   return (
     <AppDataProvider>
+      <a className="skip-link" href="#main-content">মূল কনটেন্টে যান</a>
       {!isAdminRoute && <SiteHeader />}
-      <main className={`app-main${isAdminRoute ? ' admin-only-main' : ''}`}>
+      <main className={`app-main${isAdminRoute ? ' admin-only-main' : ''}`} id="main-content">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/emergency-services" element={<EmergencyServicesPage />} />

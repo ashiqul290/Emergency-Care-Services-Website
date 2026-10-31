@@ -109,10 +109,10 @@ function LocalListingBoard() {
 
   return (
     <section className="listing-board section-wrap">
-      <div className="listing-type-tabs" role="tablist" aria-label="তথ্যের ধরন">
+      <div className="listing-type-tabs" role="group" aria-label="তথ্যের ধরন">
         {visibleTypes.map((type) => (
           <button
-            aria-selected={displayedType === type.id}
+            aria-pressed={displayedType === type.id}
             className={`listing-type-tab${displayedType === type.id ? ' active' : ''}`}
             key={type.id}
             onClick={() => {
@@ -134,7 +134,6 @@ function LocalListingBoard() {
               setFormOpen(false)
               setFormSuccess('')
             }}
-            role="tab"
             type="button"
           >
             {type.id === 'emergency' && <span className="tab-alert" aria-hidden="true">!</span>}
@@ -144,7 +143,7 @@ function LocalListingBoard() {
       </div>
 
       {displayedType !== 'emergency' && displayedType !== 'manual-order' && (
-        <div className="listing-category-tabs" aria-label="ক্যাটাগরি দিয়ে খুঁজুন">
+        <div className="listing-category-tabs" role="group" aria-label="ক্যাটাগরি দিয়ে খুঁজুন">
           <button
             aria-pressed={!activeCategory}
             className={`listing-category-tab${!activeCategory ? ' active' : ''}`}
@@ -180,7 +179,7 @@ function LocalListingBoard() {
           <button className="add-listing-button" onClick={() => {
             setFormOpen(!formOpen)
             setFormSuccess('')
-          }} type="button">
+          }} aria-controls={formOpen ? 'add-listing-dialog' : undefined} aria-expanded={formOpen} type="button">
             <span aria-hidden="true">＋</span> তথ্য যোগ করুন
           </button>
         )}
@@ -198,9 +197,21 @@ function LocalListingBoard() {
             }
           }}
         >
-          <section aria-labelledby="manual-order-title" aria-modal="true" className="manual-order-modal" role="dialog">
+          <section
+            aria-labelledby="manual-order-title"
+            aria-modal="true"
+            className="manual-order-modal"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setActiveType('product')
+                setActiveCategory('')
+              }
+            }}
+            role="dialog"
+          >
             <button
               aria-label="ম্যানুয়াল অর্ডার বন্ধ করুন"
+              autoFocus
               className="manual-order-close"
               onClick={() => {
                 setActiveType('product')
@@ -312,6 +323,8 @@ function LocalListingBoard() {
             {(listing.type === 'product' || listing.type === 'service') && (
               <>
                 <button
+                  aria-controls={requestingListing?.id === listing.id ? `request-form-${listing.id}` : undefined}
+                  aria-expanded={requestingListing?.id === listing.id}
                   className="listing-request-button"
                   onClick={() => {
                     setRequestError('')
@@ -322,7 +335,7 @@ function LocalListingBoard() {
                   {requestingListing?.id === listing.id ? 'আবেদন বন্ধ করুন' : 'পণ্য / সেবা নিতে আবেদন করুন'}
                 </button>
                 {requestingListing?.id === listing.id && (
-                  <form className="listing-request-form" onSubmit={submitRequest}>
+                  <form className="listing-request-form" id={`request-form-${listing.id}`} onSubmit={submitRequest}>
                     <h4>আবেদনের তথ্য</h4>
                     <label>
                       আপনার নাম

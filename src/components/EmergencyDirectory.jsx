@@ -1,8 +1,13 @@
-import { emergencyServices } from '../data/emergencyServices.js'
 import Icon from './Icon.jsx'
 import { Link } from 'react-router-dom'
+import { useAppData } from '../context/useAppData.js'
 
 function EmergencyDirectory() {
+  const { emergencyServices, hiddenEmergencyServiceIds } = useAppData()
+  const visibleServices = emergencyServices.filter((service) => (
+    !hiddenEmergencyServiceIds.includes(service.id)
+  ))
+
   return (
     <section className="directory-section section-wrap" id="emergency-directory">
       <div className="section-heading">
@@ -16,7 +21,7 @@ function EmergencyDirectory() {
       </div>
 
       <div className="service-grid">
-        {emergencyServices.map((service) => (
+        {visibleServices.map((service) => (
           <article className={`service-card${service.featured ? ' service-card-featured' : ''}`} key={service.id}>
             <div className="service-card-top">
               <span className="service-icon"><Icon name={service.icon} size={22} /></span>

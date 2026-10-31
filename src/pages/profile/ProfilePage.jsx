@@ -82,6 +82,7 @@ function ProfilePage() {
             <span>আপনার পছন্দের একটি ছবি যোগ করুন।</span>
             <input
               accept="image/*"
+              aria-label="প্রোফাইল ছবি নির্বাচন করুন"
               className="profile-image-input"
               onChange={chooseImage}
               ref={imageInput}

@@ -1230,8 +1230,11 @@
   }
 
   .site-header {
-    height: 72px;
+    height: auto;
+    min-height: 72px;
+    flex-wrap: wrap;
     gap: 12px;
+    padding-block: 10px;
   }
 
   .brand {
@@ -1248,7 +1251,13 @@
   .brand-logo-copy strong:nth-child(2) { font-size: 14px; }
 
   .main-nav {
-    display: none;
+    display: flex;
+    flex: 1 0 100%;
+    order: 1;
+    justify-content: center;
+    gap: 28px;
+    margin: 0;
+    padding-block: 4px 2px;
   }
 
   .city-picker {

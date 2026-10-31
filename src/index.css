@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap');
 
 :root {
-  font-family: 'Noto Sans Bengali', 'DM Sans', sans-serif;
+  font-family: 'DM Sans', 'Noto Sans Bengali', sans-serif;
   color: #232b29;
   background: #fff;
   font-synthesis: none;
@@ -11,7 +11,7 @@
 
   --red: #d9433f;
   --ink: #232b29;
-  --muted: #737d79;
+  --muted: #626c67;
   --line: #eceeeb;
 }
 
@@ -22,12 +22,16 @@
 html {
   min-width: 320px;
   scroll-behavior: smooth;
+  scroll-padding-top: 1rem;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -35,7 +39,140 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+#root :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+#root h1 {
+  font-size: clamp(2rem, 3.8vw, 3rem);
+}
+
+#root h2 {
+  font-size: clamp(1.375rem, 2.2vw, 1.8rem);
+}
+
+#root h3 {
+  font-size: clamp(1.125rem, 1.7vw, 1.35rem);
+}
+
+#root h4 {
+  font-size: 1rem;
+}
+
+#root p {
+  font-size: max(0.9375rem, 0.9375em);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+#root span:not([aria-hidden="true"]) {
+  font-size: max(0.8125rem, 0.8125em);
+}
+
+#root :is(a, button, label, small, summary) {
+  font-size: max(0.875rem, 0.875em);
+}
+
+#root :is(input, textarea, select) {
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+#root .hero-copy h1 {
+  font-size: clamp(2.5rem, 5.2vw, 4.25rem);
+  line-height: 1.15;
+}
+
+#root .hero-copy h1 > span {
+  font-size: 1em;
+}
+
+#root :is(
+  .section-kicker,
+  .eyebrow,
+  .service-category,
+  .service-number > span:first-child,
+  .listing-category-tab,
+  .listing-type-tab,
+  .request-status,
+  .public-listing-category,
+  .customer-request-category,
+  .admin-count,
+  .admin-sidebar-label,
+  .admin-sidebar-link small,
+  .admin-listing-meta span,
+  .wizard-progress-step small
+) {
+  font-size: max(0.8125rem, 0.8125em);
+}
+
+#root .admin-sidebar-brand .brand-logo-copy small {
+  font-size: 0.75rem;
+}
+
+#root .brand-logo-copy strong:first-child,
+#root .admin-sidebar-brand .brand-logo-copy strong:first-child {
+  font-size: 0.75rem;
+}
+
+#root .brand-logo-copy strong:nth-child(2) {
+  font-size: 1rem;
+}
+
+#root :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 3px solid #735de2;
+  outline-offset: 3px;
+}
+
+#root .route-page-heading {
+  padding-top: 30px;
+  padding-bottom: 12px;
+}
+
+#root .route-page-heading h1 {
+  margin: 0 0 8px;
+}
+
+#root .route-page-heading p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  transform: translateY(-160%);
+  border-radius: 8px;
+  background: var(--ink);
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 ::selection {
   color: white;
   background: var(--red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

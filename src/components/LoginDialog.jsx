@@ -35,18 +35,23 @@ function LoginDialog({ onClose, onLogin }) {
   return (
     <div
       className="login-overlay"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose()
+      }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
       <section
         aria-labelledby="login-title"
+        aria-describedby="login-description"
         aria-modal="true"
         className="login-dialog"
         role="dialog"
       >
         <button
           aria-label="লগইন ফর্ম বন্ধ করুন"
+          autoFocus
           className="login-close"
           onClick={onClose}
           type="button"
@@ -56,25 +61,23 @@ function LoginDialog({ onClose, onLogin }) {
         <div className="login-dialog-mark" aria-hidden="true">+</div>
         <span className="section-kicker">আপনার অ্যাকাউন্ট</span>
         <h2 id="login-title">{isSignup ? 'নতুন অ্যাকাউন্ট খুলুন' : 'আবার স্বাগতম'}</h2>
-        <p className="login-description">
+        <p className="login-description" id="login-description">
           {isSignup ? 'আপনার তথ্য দিয়ে অ্যাকাউন্ট তৈরি করুন।' : 'আপনার তথ্য দিয়ে লগইন করুন।'}
         </p>
 
-        <div className="account-mode-tabs" role="tablist" aria-label="অ্যাকাউন্টের ধরন">
+        <div className="account-mode-tabs" role="group" aria-label="অ্যাকাউন্টের ধরন">
           <button
-            aria-selected={!isSignup}
+            aria-pressed={!isSignup}
             className={!isSignup ? 'active' : ''}
             onClick={() => changeMode('login')}
-            role="tab"
             type="button"
           >
             লগইন
           </button>
           <button
-            aria-selected={isSignup}
+            aria-pressed={isSignup}
             className={isSignup ? 'active' : ''}
             onClick={() => changeMode('signup')}
-            role="tab"
             type="button"
           >
             সাইন আপ
