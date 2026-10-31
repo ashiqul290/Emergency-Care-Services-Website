@@ -1,9 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAppData } from '../../context/useAppData.js'
 import { listingTypes } from '../../data/listingCategories.js'
 import './AdminDashboardPage.css'
 
+const adminSections = [
+  { id: 'overview', label: 'ড্যাশবোর্ড', symbol: '▦' },
+  { id: 'requests', label: 'Customer requests', symbol: '↗', countKey: 'pendingRequests' },
+  { id: 'listings', label: 'তথ্য অনুমোদন', symbol: '▤', countKey: 'pendingListings' },
+  { id: 'history', label: 'আবেদনের ইতিহাস', symbol: '◷', countKey: 'completedRequests' },
+  { id: 'cities', label: 'শহর পরিচালনা', symbol: '⌖', countKey: 'cities' },
+  { id: 'published', label: 'প্রকাশিত তথ্য', symbol: '✓', countKey: 'approvedListings' },
+]
+
 function AdminDashboardPage() {
+  const navigate = useNavigate()
   const {
     cities,
     listings,
@@ -14,14 +25,50 @@ function AdminDashboardPage() {
     removeListing,
     updateRequestStatus,
     removeRequest,
+    logout,
   } = useAppData()
   const [cityForm, setCityForm] = useState({ name: '', englishName: '' })
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
+  const [activeSection, setActiveSection] = useState('overview')
 
   const pendingListings = listings.filter((listing) => listing.status === 'pending')
   const approvedListings = listings.filter((listing) => listing.status === 'approved')
   const pendingRequests = requests.filter((request) => request.status === 'pending')
+  const completedRequests = requests.filter((request) => request.status !== 'pending')
+  const requestMetrics = [
+    { label: 'অপেক্ষায়', value: pendingRequests.length, color: '#e8a23b' },
+    { label: 'অনুমোদিত', value: requests.filter((request) => request.status === 'approved').length, color: '#36a878' },
+    { label: 'প্রত্যাখ্যাত', value: requests.filter((request) => request.status === 'rejected').length, color: '#d9433f' },
+  ]
+  const listingTypeMetrics = [
+    { label: 'পণ্য', value: listings.filter((listing) => listing.type === 'product').length, color: '#7861e8' },
+    { label: 'সেবা', value: listings.filter((listing) => listing.type === 'service').length, color: '#35aab5' },
+    { label: 'কোম্পানি', value: listings.filter((listing) => listing.type === 'company').length, color: '#e8a23b' },
+    { label: 'ব্যক্তি', value: listings.filter((listing) => listing.type === 'person').length, color: '#d9789c' },
+    { label: 'জরুরি নম্বর', value: listings.filter((listing) => listing.type === 'emergency').length, color: '#d9433f' },
+  ]
+  const maxListingCount = Math.max(...listingTypeMetrics.map((item) => item.value), 1)
+
+  function signOut() {
+    try {
+      logout()
+      navigate('/', { replace: true })
+    } catch (logoutError) {
+      setError(`লগআউট করা যায়নি: ${logoutError.message}`)
+    }
+  }
+
+  function getSectionCount(key) {
+    const counts = {
+      pendingRequests: pendingRequests.length,
+      pendingListings: pendingListings.length,
+      completedRequests: completedRequests.length,
+      cities: cities.length,
+      approvedListings: approvedListings.length,
+    }
+    return counts[key] ?? 0
+  }
 
   function submitCity(event) {
     event.preventDefault()
@@ -107,140 +154,100 @@ function AdminDashboardPage() {
     }
   }
 
-  return (
-    <div className="admin-page section-wrap">
-      <header className="admin-page-heading">
-        <div>
-          <span className="section-kicker">পরিচালনা</span>
-          <h1>অ্যাডমিন ড্যাশবোর্ড</h1>
-          <p>ইউজারের জমা দেওয়া তথ্য অনুমোদন করুন এবং শহরের তালিকা পরিচালনা করুন।</p>
-        </div>
-        <span className="admin-demo-badge">Local demo</span>
-      </header>
+  function renderRequestCards(items, completed = false) {
+    if (items.length === 0) {
+      return <div className="admin-empty">{completed ? 'এখনো কোনো আবেদন সম্পন্ন হয়নি।' : 'নতুন কোনো ক্রেতা আবেদন নেই।'}</div>
+    }
 
-      <div className="admin-notice" role="note">
-        Demo mode: ড্যাশবোর্ড দেখতে login লাগে, তবে login আসল password যাচাই করে না এবং role-based security নেই। সব তথ্য শুধু এই browser-এর localStorage-এ থাকে।
-      </div>
-      {feedback && <p className="admin-feedback admin-success" role="status">{feedback}</p>}
-      {error && <p className="admin-feedback admin-error" role="alert">{error}</p>}
-
-      <section className="admin-stats" aria-label="তথ্যের সারাংশ">
-        <div><span>মোট শহর</span><strong>{cities.length}</strong></div>
-        <div><span>অনুমোদনের অপেক্ষায়</span><strong>{pendingListings.length}</strong></div>
-        <div><span>প্রকাশিত তথ্য</span><strong>{approvedListings.length}</strong></div>
-        <div><span>নতুন ক্রেতা আবেদন</span><strong>{pendingRequests.length}</strong></div>
-      </section>
-
-      <section className="admin-panel">
-        <div className="admin-panel-heading">
-          <div>
-            <span className="section-kicker">Customer requests</span>
-            <h2>পণ্য ও সেবার আবেদন</h2>
-          </div>
-          <span className="admin-count">{pendingRequests.length}টি অপেক্ষায়</span>
-        </div>
-        {pendingRequests.length === 0 ? (
-          <div className="admin-empty">নতুন কোনো ক্রেতা আবেদন নেই।</div>
-        ) : (
-          <div className="admin-listing-grid">
-            {pendingRequests.map((request) => (
-              <article className="admin-listing-card" key={request.id}>
-                <div className="admin-listing-meta">
-                  <span>{request.listingType === 'product' ? 'পণ্য' : 'সেবা'}</span>
-                  <span>{request.category}</span>
-                </div>
-                <h3>{request.listingTitle}</h3>
-                <p>আবেদনকারী: {request.customerName}</p>
-                {request.message && <p>{request.message}</p>}
-                <div className="admin-listing-details">
-                  <span>{request.cityName}</span>
-                  <a href={`tel:${request.phone.replace(/[^\d+]/g, '')}`}>{request.phone}</a>
-                </div>
-                <div className="admin-actions">
+    return (
+      <div className="admin-listing-grid">
+        {items.map((request) => (
+          <article className="admin-listing-card" key={request.id}>
+            <div className="admin-listing-meta">
+              <span>{request.listingType === 'manual-order' ? 'ম্যানুয়াল অর্ডার' : request.listingType === 'product' ? 'পণ্য' : 'সেবা'}</span>
+              <span>{request.category}</span>
+              {completed && <span>{request.status === 'approved' ? 'অনুমোদিত' : 'প্রত্যাখ্যাত'}</span>}
+            </div>
+            <h3>{request.listingTitle}</h3>
+            <p>আবেদনকারী: {request.customerName}</p>
+            {request.message && <p>{request.message}</p>}
+            <div className="admin-listing-details">
+              <span>{request.cityName}</span>
+              {request.deliveryAddress && <span>ডেলিভারি ঠিকানা: {request.deliveryAddress}</span>}
+              <a href={`tel:${request.phone.replace(/[^\d+]/g, '')}`}>{request.phone}</a>
+            </div>
+            <div className="admin-actions">
+              {completed ? (
+                <button className="admin-delete" onClick={() => deleteRequest(request)} type="button">আবেদন মুছুন</button>
+              ) : (
+                <>
                   <button className="admin-approve" onClick={() => changeRequestStatus(request, 'approved')} type="button">আবেদন অনুমোদন</button>
                   <button className="admin-delete" onClick={() => changeRequestStatus(request, 'rejected')} type="button">প্রত্যাখ্যান</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+                </>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    )
+  }
 
-      <section className="admin-panel">
-        <div className="admin-panel-heading">
-          <div>
-            <span className="section-kicker">Moderation</span>
-            <h2>অনুমোদনের অপেক্ষায়</h2>
-          </div>
-          <span className="admin-count">{pendingListings.length}টি</span>
-        </div>
-        {pendingListings.length === 0 ? (
-          <div className="admin-empty">নতুন কোনো তথ্য অনুমোদনের অপেক্ষায় নেই।</div>
-        ) : (
-          <div className="admin-listing-grid">
-            {pendingListings.map((listing) => (
-              <article className="admin-listing-card" key={listing.id}>
-                <div className="admin-listing-meta">
-                  <span>{listingTypes.find((type) => type.id === listing.type)?.label ?? listing.type}</span>
-                  <span>{listing.category}</span>
-                </div>
-                <h3>{listing.title}</h3>
-                <p>{listing.description}</p>
-                <div className="admin-listing-details">
-                  <span>{listing.cityName}</span>
-                  <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}>{listing.phone}</a>
-                </div>
-                <div className="admin-actions">
+  function renderListingCards(items, published = false) {
+    if (items.length === 0) {
+      return <div className="admin-empty">{published ? 'এখনো কোনো তথ্য প্রকাশ করা হয়নি।' : 'নতুন কোনো তথ্য অনুমোদনের অপেক্ষায় নেই।'}</div>
+    }
+
+    return (
+      <div className="admin-listing-grid">
+        {items.map((listing) => (
+          <article className="admin-listing-card" key={listing.id}>
+            <div className="admin-listing-meta">
+              <span>{listingTypes.find((type) => type.id === listing.type)?.label ?? listing.type}</span>
+              {listing.ownerType && <span>{listing.ownerType === 'company' ? 'কোম্পানি' : 'ব্যক্তি'}</span>}
+              <span>{listing.category}</span>
+            </div>
+            {listing.image && <img className="admin-listing-image" alt={listing.title} src={listing.image} />}
+            <h3>{listing.title}</h3>
+            <p>{listing.description}</p>
+            {listing.type === 'product' && (
+              <p className="admin-product-details">
+                মূল্য: ৳ {listing.price}{listing.stock ? ` · স্টক: ${listing.stock}` : ''}
+              </p>
+            )}
+            <div className="admin-listing-details">
+              <span>{listing.cityName}</span>
+              {listing.submitterName && <span>{listing.submitterName}</span>}
+              {listing.phone && <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}>{listing.phone}</a>}
+              {listing.whatsapp && <a href={`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`} rel="noreferrer" target="_blank">WhatsApp</a>}
+              {(listing.mapLink || listing.coordinates) && (
+                <a
+                  href={listing.mapLink || `https://maps.google.com/?q=${listing.coordinates.latitude},${listing.coordinates.longitude}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  ম্যাপ
+                </a>
+              )}
+            </div>
+            <div className="admin-actions">
+              {published ? (
+                <button className="admin-delete" onClick={() => deleteListing(listing)} type="button">প্রকাশিত তথ্য মুছুন</button>
+              ) : (
+                <>
                   <button className="admin-approve" onClick={() => changeListingStatus(listing, 'approved')} type="button">অনুমোদন করুন</button>
                   <button className="admin-delete" onClick={() => deleteListing(listing)} type="button">মুছুন</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+                </>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    )
+  }
 
-      <section className="admin-panel">
-        <div className="admin-panel-heading">
-          <div>
-            <span className="section-kicker">Request history</span>
-            <h2>সম্পন্ন আবেদন</h2>
-          </div>
-          <span className="admin-count">{requests.length - pendingRequests.length}টি</span>
-        </div>
-        {requests.filter((request) => request.status !== 'pending').length === 0 ? (
-          <div className="admin-empty">এখনো কোনো আবেদন সম্পন্ন হয়নি।</div>
-        ) : (
-          <div className="admin-listing-grid">
-            {requests.filter((request) => request.status !== 'pending').map((request) => (
-              <article className="admin-listing-card" key={request.id}>
-                <div className="admin-listing-meta">
-                  <span>{request.status === 'approved' ? 'অনুমোদিত' : 'প্রত্যাখ্যাত'}</span>
-                  <span>{request.category}</span>
-                </div>
-                <h3>{request.listingTitle}</h3>
-                <p>আবেদনকারী: {request.customerName}</p>
-                <div className="admin-listing-details">
-                  <span>{request.cityName}</span>
-                  <a href={`tel:${request.phone.replace(/[^\d+]/g, '')}`}>{request.phone}</a>
-                </div>
-                <div className="admin-actions">
-                  <button className="admin-delete" onClick={() => deleteRequest(request)} type="button">আবেদন মুছুন</button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="admin-panel city-admin-panel">
-        <div className="admin-panel-heading">
-          <div>
-            <span className="section-kicker">Locations</span>
-            <h2>শহর পরিচালনা</h2>
-          </div>
-          <span className="admin-count">{cities.length}টি</span>
-        </div>
+  function renderCities() {
+    return (
+      <>
         <form className="city-admin-form" onSubmit={submitCity}>
           <label>
             শহরের বাংলা নাম
@@ -260,40 +267,154 @@ function AdminDashboardPage() {
             </div>
           ))}
         </div>
-      </section>
+      </>
+    )
+  }
 
-      <section className="admin-panel">
-        <div className="admin-panel-heading">
-          <div>
-            <span className="section-kicker">Published</span>
-            <h2>অনুমোদিত তথ্য</h2>
+  function renderSection() {
+    if (activeSection === 'overview') {
+      return (
+        <>
+          <section className="admin-stats" aria-label="তথ্যের সারাংশ">
+            <div><span>মোট শহর</span><strong>{cities.length}</strong><small>সক্রিয় location</small></div>
+            <div><span>নতুন customer requests</span><strong>{pendingRequests.length}</strong><small>অনুমোদনের অপেক্ষায়</small></div>
+            <div><span>অনুমোদনের অপেক্ষায়</span><strong>{pendingListings.length}</strong><small>নতুন listing</small></div>
+            <div><span>প্রকাশিত তথ্য</span><strong>{approvedListings.length}</strong><small>সবার জন্য দৃশ্যমান</small></div>
+          </section>
+
+          <div className="admin-chart-grid">
+            <section className="admin-panel admin-chart-panel">
+              <div className="admin-panel-heading">
+                <div><span className="section-kicker">Overview</span><h2>Customer request অবস্থা</h2></div>
+                <span className="admin-count">{requests.length}টি মোট</span>
+              </div>
+              {requests.length === 0 ? (
+                <div className="admin-empty">চার্ট দেখানোর মতো আবেদন এখনো নেই।</div>
+              ) : (
+                <div className="request-chart">
+                  <div
+                    aria-label={requestMetrics.map((item) => `${item.label}: ${item.value}`).join(', ')}
+                    className="request-chart-ring"
+                    role="img"
+                    style={{
+                      '--pending-angle': `${(requestMetrics[0].value / requests.length) * 360}deg`,
+                      '--approved-angle': `${((requestMetrics[0].value + requestMetrics[1].value) / requests.length) * 360}deg`,
+                      '--pending-color': requestMetrics[0].color,
+                      '--approved-color': requestMetrics[1].color,
+                      '--rejected-color': requestMetrics[2].color,
+                    }}
+                  >
+                    <span><strong>{requests.length}</strong><small>মোট আবেদন</small></span>
+                  </div>
+                  <div className="request-chart-legend">
+                    {requestMetrics.map((metric) => (
+                      <div key={metric.label}>
+                        <span className="chart-legend-dot" style={{ '--legend-color': metric.color }} />
+                        <span>{metric.label}</span>
+                        <strong>{metric.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="admin-panel admin-chart-panel">
+              <div className="admin-panel-heading">
+                <div><span className="section-kicker">Listings</span><h2>ধরন অনুযায়ী তথ্য</h2></div>
+                <span className="admin-count">{listings.length}টি মোট</span>
+              </div>
+              <div className="listing-type-chart">
+                {listingTypeMetrics.map((metric) => (
+                  <div className="listing-type-bar-row" key={metric.label}>
+                    <span>{metric.label}</span>
+                    <div className="listing-type-track">
+                      <span style={{ width: `${metric.value === 0 ? 0 : Math.max((metric.value / maxListingCount) * 100, 4)}%`, '--bar-color': metric.color }} />
+                    </div>
+                    <strong>{metric.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
-          <span className="admin-count">{approvedListings.length}টি</span>
+        </>
+      )
+    }
+
+    if (activeSection === 'requests') return renderRequestCards(pendingRequests)
+    if (activeSection === 'listings') return renderListingCards(pendingListings)
+    if (activeSection === 'history') return renderRequestCards(completedRequests, true)
+    if (activeSection === 'cities') return renderCities()
+    return renderListingCards(approvedListings, true)
+  }
+
+  const activeSectionInfo = adminSections.find((section) => section.id === activeSection)
+
+  return (
+    <div className="admin-layout">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-brand">
+          <span className="admin-sidebar-logo">+</span>
+          <span><strong>সহায়তা</strong><small>ADMIN PANEL</small></span>
         </div>
-        {approvedListings.length === 0 ? (
-          <div className="admin-empty">এখনো কোনো তথ্য প্রকাশ করা হয়নি।</div>
-        ) : (
-          <div className="admin-listing-grid">
-            {approvedListings.map((listing) => (
-              <article className="admin-listing-card" key={listing.id}>
-                <div className="admin-listing-meta">
-                  <span>{listingTypes.find((type) => type.id === listing.type)?.label ?? listing.type}</span>
-                  <span>{listing.category}</span>
-                </div>
-                <h3>{listing.title}</h3>
-                <p>{listing.description}</p>
-                <div className="admin-listing-details">
-                  <span>{listing.cityName}</span>
-                  <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}>{listing.phone}</a>
-                </div>
-                <div className="admin-actions">
-                  <button className="admin-delete" onClick={() => deleteListing(listing)} type="button">প্রকাশিত তথ্য মুছুন</button>
-                </div>
-              </article>
-            ))}
+        <span className="admin-sidebar-label">WORKSPACE</span>
+        <nav aria-label="অ্যাডমিন ড্যাশবোর্ড" className="admin-sidebar-nav">
+          {adminSections.map((section) => (
+            <button
+              aria-current={activeSection === section.id ? 'page' : undefined}
+              className={`admin-sidebar-link${activeSection === section.id ? ' active' : ''}`}
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              type="button"
+            >
+              <span aria-hidden="true" className="admin-sidebar-symbol">{section.symbol}</span>
+              <span>{section.label}</span>
+              {section.countKey && <small>{getSectionCount(section.countKey)}</small>}
+            </button>
+          ))}
+        </nav>
+        <div className="admin-sidebar-note">
+          <span>LOCAL DEMO</span>
+          <p>তথ্য এই browser-এ সংরক্ষিত।</p>
+        </div>
+      </aside>
+
+      <main className="admin-workspace">
+        <header className="admin-workspace-header">
+          <div>
+            <span className="section-kicker">পরিচালনা / {activeSectionInfo?.label}</span>
+            <h1>{activeSectionInfo?.label}</h1>
+            <p>পণ্য, সেবা, আবেদন ও শহর পরিচালনা করুন।</p>
           </div>
+          <div className="admin-header-actions">
+            <span className="admin-demo-badge">Local demo</span>
+            <button className="admin-logout" onClick={signOut} type="button">লগআউট</button>
+          </div>
+        </header>
+
+        {feedback && <p className="admin-feedback admin-success" role="status">{feedback}</p>}
+        {error && <p className="admin-feedback admin-error" role="alert">{error}</p>}
+
+        {activeSection !== 'overview' && (
+          <section className="admin-panel admin-section-panel">
+            <div className="admin-panel-heading">
+              <div>
+                <span className="section-kicker">{activeSectionInfo?.label}</span>
+                <h2>{activeSectionInfo?.label}</h2>
+              </div>
+              <span className="admin-count">
+                {activeSection === 'requests' && `${pendingRequests.length}টি অপেক্ষায়`}
+                {activeSection === 'listings' && `${pendingListings.length}টি`}
+                {activeSection === 'history' && `${completedRequests.length}টি`}
+                {activeSection === 'cities' && `${cities.length}টি`}
+                {activeSection === 'published' && `${approvedListings.length}টি`}
+              </span>
+            </div>
+            {renderSection()}
+          </section>
         )}
-      </section>
+        {activeSection === 'overview' && renderSection()}
+      </main>
     </div>
   )
 }

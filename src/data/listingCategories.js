@@ -4,6 +4,7 @@ export const listingTypes = [
   { id: 'company', label: 'কোম্পানি' },
   { id: 'person', label: 'ব্যক্তি' },
   { id: 'emergency', label: 'জরুরি নম্বর' },
+  { id: 'manual-order', label: 'ম্যানুয়াল অর্ডার' },
 ]
 
 export const popularCategories = [
@@ -27,4 +28,16 @@ export const popularCategories = [
   'কাজের লোক', 'নার্সিং পরিষেবা', 'Food', 'Gas', 'Groceries', 'Meat & Fish',
   'Cosmetics & Skin Care', 'Gadgets & Electronics', 'Gift & Crockeries',
   'Cloths', 'Bag & Stationary', 'রাইড সার্ভিস',
+]
+
+export const productCategories = [
+  'Food',
+  'Gas',
+  'Groceries',
+  'Meat & Fish',
+  'Cosmetics & Skin Care',
+  'Gadgets & Electronics',
+  'Gift & Crockeries',
+  'Cloths',
+  'Bag & Stationary',
 ]

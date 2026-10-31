@@ -16,7 +16,7 @@ function SiteFooter() {
           <p>আপনার এলাকার জরুরি যোগাযোগ ও প্রয়োজনীয় সেবা—এক জায়গায়, আপনার পাশে।</p>
           <span className="footer-location">
             <Icon name="location" size={15} />
-            নির্বাচিত শহর: {selectedCity?.name ?? 'শহর বাছুন'}
+            নির্বাচিত শহর: {selectedCity?.name ?? 'সব শহর'}
           </span>
         </div>
 

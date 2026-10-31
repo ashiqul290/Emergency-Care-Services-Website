@@ -48,10 +48,11 @@ function CustomerDashboardPage() {
                   <span className="customer-request-category">{request.category} · {request.cityName}</span>
                   <h2>{request.listingTitle}</h2>
                   <p>আবেদনকারী: {request.customerName} · যোগাযোগ: {request.phone}</p>
+                  {request.deliveryAddress && <p className="customer-request-message">ডেলিভারি ঠিকানা: {request.deliveryAddress}</p>}
                   {request.message && <p className="customer-request-message">{request.message}</p>}
                 </div>
                 <span className="customer-request-kind">
-                  {request.listingType === 'product' ? 'পণ্য' : 'সেবা'}
+                  {request.listingType === 'manual-order' ? 'ম্যানুয়াল অর্ডার' : request.listingType === 'product' ? 'পণ্য' : 'সেবা'}
                 </span>
               </div>
             </article>

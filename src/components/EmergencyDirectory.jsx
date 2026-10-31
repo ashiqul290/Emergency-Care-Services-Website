@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 function EmergencyDirectory() {
   return (
-    <section className="directory-section section-wrap">
+    <section className="directory-section section-wrap" id="emergency-directory">
       <div className="section-heading">
         <div>
           <span className="section-kicker">দ্রুত যোগাযোগ</span>

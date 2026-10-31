@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppDataProvider } from './context/AppDataProvider.jsx'
 import SiteHeader from './components/SiteHeader.jsx'
 import SiteFooter from './components/SiteFooter.jsx'
@@ -11,10 +11,13 @@ import AdminRoute from './components/AdminRoute.jsx'
 import './App.css'
 
 function App() {
+  const location = useLocation()
+  const isAdminRoute = location.pathname.replace(/\/+$/, '') === '/admin'
+
   return (
     <AppDataProvider>
-      <SiteHeader />
-      <main className="app-main">
+      {!isAdminRoute && <SiteHeader />}
+      <main className={`app-main${isAdminRoute ? ' admin-only-main' : ''}`}>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/emergency-services" element={<EmergencyServicesPage />} />
@@ -31,7 +34,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <SiteFooter />
+      {!isAdminRoute && <SiteFooter />}
     </AppDataProvider>
   )
 }

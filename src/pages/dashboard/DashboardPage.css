@@ -7,7 +7,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
-  margin-bottom: 27px;
+  margin-bottom: 14px;
 }
 
 .listing-type-tab {
@@ -46,6 +46,44 @@
   border: 1px solid currentColor;
   border-radius: 50%;
   font-size: 11px;
+}
+
+.listing-category-tabs {
+  display: flex;
+  gap: 9px;
+  margin: 0 -2px 25px;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d7dbe5 transparent;
+}
+
+.listing-category-tab {
+  display: inline-flex;
+  min-height: 39px;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.listing-category-tab:hover {
+  border-color: #b7adf7;
+  box-shadow: 0 4px 12px rgba(109, 91, 225, 0.1);
+}
+
+.listing-category-tab.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
 }
 
 .listing-board-heading {
@@ -252,6 +290,32 @@
   background: white;
 }
 
+.public-listing-image {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  margin-bottom: 13px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.public-product-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.public-product-details strong {
+  color: var(--red);
+  font-size: 17px;
+}
+
+.public-product-details span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .public-listing-card h3 {
   margin: 7px 0 5px;
   color: var(--ink);
@@ -269,6 +333,13 @@
   color: var(--red);
   font-size: 11px;
   font-weight: 700;
+}
+
+.public-listing-owner {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .public-listing-footer {
@@ -328,6 +399,18 @@
   margin: 0;
   color: var(--ink);
   font-size: 14px;
+}
+
+.manual-order-form {
+  max-width: 720px;
+  margin: 0 0 20px;
+}
+
+.manual-order-form h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .listing-request-form label {

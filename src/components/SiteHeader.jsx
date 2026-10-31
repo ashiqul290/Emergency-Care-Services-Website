@@ -24,12 +24,22 @@ function SiteHeader() {
       <details className="city-picker">
         <summary>
           <Icon name="location" size={16} />
-          <span>{selectedCity?.name ?? 'শহর বাছুন'}</span>
+          <span>{selectedCity?.name ?? 'সব শহর'}</span>
           <span className="city-picker-chevron">⌄</span>
         </summary>
         <div className="city-picker-menu">
           <p>আপনার শহর বেছে নিন</p>
           <div className="city-picker-options">
+            <button
+              className={!selectedCity ? 'selected' : ''}
+              onClick={(event) => {
+                chooseCity('all')
+                event.currentTarget.closest('details').open = false
+              }}
+              type="button"
+            >
+              সব শহর <span>All cities</span>
+            </button>
             {cities.map((city) => (
               <button
                 className={city.id === selectedCity?.id ? 'selected' : ''}

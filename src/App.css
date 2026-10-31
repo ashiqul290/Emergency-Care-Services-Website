@@ -6,6 +6,10 @@
   min-height: calc(100vh - 172px);
 }
 
+.admin-only-main {
+  min-height: 100vh;
+}
+
 .main-nav a.active {
   color: var(--red);
 }
@@ -369,6 +373,17 @@
 .admin-access-card .button {
   min-height: 42px;
   font-size: 12px;
+}
+
+.admin-access-card > button,
+.admin-access-card > a {
+  margin-top: 10px;
+}
+
+.admin-access-card > a {
+  border-color: #e9deda;
+  background: white;
+  color: var(--ink);
 }
 
 .admin-access-card small {

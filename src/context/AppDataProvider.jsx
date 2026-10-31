@@ -7,6 +7,7 @@ const LISTINGS_KEY = 'city-care-listings'
 const REQUESTS_KEY = 'city-care-requests'
 const SELECTED_CITY_KEY = 'city-care-selected-city'
 const DEMO_USER_KEY = 'city-care-demo-user'
+const ALL_CITIES_ID = 'all'
 
 function readStoredArray(key, fallback) {
   const stored = window.localStorage.getItem(key)
@@ -25,7 +26,9 @@ export function AppDataProvider({ children }) {
   ))
   const [user, setUser] = useState(() => window.localStorage.getItem(DEMO_USER_KEY))
 
-  const selectedCity = cities.find((city) => city.id === selectedCityId) ?? cities[0]
+  const selectedCity = selectedCityId === ALL_CITIES_ID
+    ? null
+    : cities.find((city) => city.id === selectedCityId) ?? cities[0]
 
   function chooseCity(cityId) {
     window.localStorage.setItem(SELECTED_CITY_KEY, cityId)
