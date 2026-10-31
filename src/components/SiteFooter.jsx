@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import { useAppData } from '../context/useAppData.js'
+import BrandLogo from './BrandLogo.jsx'
 
 function SiteFooter() {
   const { selectedCity } = useAppData()
@@ -9,9 +10,8 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-main">
         <div className="footer-about">
-          <Link className="brand footer-brand" to="/">
-            <span className="brand-mark" aria-hidden="true">+</span>
-            <span>সহায়তা<span className="brand-dot">.</span></span>
+          <Link className="brand footer-brand" to="/" aria-label="Emergency & Care Services — Home">
+            <BrandLogo />
           </Link>
           <p>আপনার এলাকার জরুরি যোগাযোগ ও প্রয়োজনীয় সেবা—এক জায়গায়, আপনার পাশে।</p>
           <span className="footer-location">
@@ -43,7 +43,7 @@ function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <span>© সহায়তা — জরুরি সময়ে তথ্যভিত্তিক সহায়তা</span>
+        <span>© Emergency &amp; Care Services — জরুরি সময়ে তথ্যভিত্তিক সহায়তা</span>
         <span className="footer-disclaimer">প্রয়োজনে সরকারি উৎস থেকে নম্বর যাচাই করুন।</span>
       </div>
     </footer>

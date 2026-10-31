@@ -7,6 +7,7 @@ import EmergencyServicesPage from './pages/emergency-services/EmergencyServicesP
 import HelpGuidePage from './pages/help-guide/HelpGuidePage.jsx'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
 import CustomerDashboardPage from './pages/customer-dashboard/CustomerDashboardPage.jsx'
+import ProfilePage from './pages/profile/ProfilePage.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
 import './App.css'
 
@@ -31,6 +32,7 @@ function App() {
             )}
           />
           <Route path="/my-requests" element={<CustomerDashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

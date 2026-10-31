@@ -60,6 +60,29 @@
   letter-spacing: 1px;
 }
 
+.admin-sidebar-brand .brand-mark {
+  width: 35px;
+  height: 35px;
+  border-radius: 11px;
+}
+
+.admin-sidebar-brand .brand-logo-copy strong:first-child {
+  color: var(--ink);
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+.admin-sidebar-brand .brand-logo-copy strong:nth-child(2) {
+  font-size: 15px;
+}
+
+.admin-sidebar-brand .brand-logo-copy small {
+  color: #9aa19e;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
 .admin-sidebar-label {
   margin: 22px 9px 9px;
 }
@@ -133,26 +156,6 @@
   color: white;
 }
 
-.admin-sidebar-note {
-  margin-top: auto;
-  padding: 13px 10px 2px;
-  border-top: 1px solid var(--line);
-}
-
-.admin-sidebar-note span {
-  color: #ad7771;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.7px;
-}
-
-.admin-sidebar-note p {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.6;
-}
-
 .admin-workspace {
   min-width: 0;
 }
@@ -183,7 +186,6 @@
   line-height: 1.7;
 }
 
-.admin-demo-badge,
 .admin-count {
   padding: 7px 11px;
   border: 1px solid #e8e4fa;
@@ -391,6 +393,19 @@
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 10px;
+}
+
+.admin-listing-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin-listing-owner img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .admin-listing-details a {
@@ -664,8 +679,7 @@
     padding-bottom: 11px;
   }
 
-  .admin-sidebar-label,
-  .admin-sidebar-note {
+  .admin-sidebar-label {
     display: none;
   }
 

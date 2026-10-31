@@ -28,16 +28,20 @@ function LocalListingBoard() {
     message: '',
   })
 
+  const displayedType = activeType === 'manual-order' && !selectedCity ? 'product' : activeType
   const visibleListings = useMemo(() => listings.filter((listing) => (
     listing.status === 'approved'
-    && (activeType === 'company' || activeType === 'person'
-      ? listing.ownerType === activeType
-      : listing.type === activeType)
+    && (displayedType === 'company' || displayedType === 'person'
+      ? listing.ownerType === displayedType
+      : listing.type === displayedType)
     && (!selectedCity || listing.cityId === selectedCity.id || listing.cityId === 'all')
     && (!activeCategory || listing.category === activeCategory)
-  )), [activeCategory, activeType, listings, selectedCity])
+  )), [activeCategory, displayedType, listings, selectedCity])
 
-  const categories = activeType === 'product' ? productCategories : popularCategories
+  const categories = displayedType === 'product' ? productCategories : popularCategories
+  const visibleTypes = listingTypes.filter((type) => (
+    type.id !== 'manual-order' || selectedCity
+  ))
 
   function submitListing(listing) {
     setFormSuccess('')
@@ -106,14 +110,23 @@ function LocalListingBoard() {
   return (
     <section className="listing-board section-wrap">
       <div className="listing-type-tabs" role="tablist" aria-label="তথ্যের ধরন">
-        {listingTypes.map((type) => (
+        {visibleTypes.map((type) => (
           <button
-            aria-selected={activeType === type.id}
-            className={`listing-type-tab${activeType === type.id ? ' active' : ''}`}
+            aria-selected={displayedType === type.id}
+            className={`listing-type-tab${displayedType === type.id ? ' active' : ''}`}
             key={type.id}
             onClick={() => {
               if (type.id === 'emergency') {
                 document.getElementById('emergency-directory')?.scrollIntoView({ behavior: 'smooth' })
+                return
+              }
+              if (type.id === 'manual-order') {
+                setActiveType(type.id)
+                setActiveCategory('')
+                setFormOpen(false)
+                setFormSuccess('')
+                setManualOrderError('')
+                setManualOrderFeedback('')
                 return
               }
               setActiveType(type.id)
@@ -130,7 +143,7 @@ function LocalListingBoard() {
         ))}
       </div>
 
-      {activeType !== 'emergency' && activeType !== 'manual-order' && (
+      {displayedType !== 'emergency' && displayedType !== 'manual-order' && (
         <div className="listing-category-tabs" aria-label="ক্যাটাগরি দিয়ে খুঁজুন">
           <button
             aria-pressed={!activeCategory}
@@ -158,12 +171,12 @@ function LocalListingBoard() {
         <div>
           <span className="section-kicker">{selectedCity?.name ?? 'সব শহর'}</span>
           <h2>
-            {activeType === 'manual-order'
+            {displayedType === 'manual-order'
               ? `ম্যানুয়াল অর্ডার — ${selectedCity?.englishName ?? 'সব শহর'}`
-              : `${listingTypes.find((type) => type.id === activeType)?.label} খুঁজুন`}
+              : `${listingTypes.find((type) => type.id === displayedType)?.label} খুঁজুন`}
           </h2>
         </div>
-        {activeType !== 'manual-order' && (
+        {displayedType !== 'manual-order' && (
           <button className="add-listing-button" onClick={() => {
             setFormOpen(!formOpen)
             setFormSuccess('')
@@ -175,52 +188,76 @@ function LocalListingBoard() {
 
       {formSuccess && <p className="form-feedback form-success" role="status">{formSuccess}</p>}
 
-      {activeType === 'manual-order' && (
-        <form className="listing-request-form manual-order-form" onSubmit={submitManualOrderForm}>
-          <h3>স্থানীয় বাজার থেকে যা কিছু দরকার লিখে দিন। আমাদের টিম ডেলিভারি ম্যানের মাধ্যমে পৌঁছে দেবে।</h3>
-          <label>
-            আপনার নাম *
-            <input
-              autoComplete="name"
-              onChange={(event) => setManualOrderForm({ ...manualOrderForm, customerName: event.target.value })}
-              required
-              value={manualOrderForm.customerName}
-            />
-          </label>
-          <label>
-            মোবাইল নম্বর *
-            <input
-              autoComplete="tel"
-              inputMode="tel"
-              onChange={(event) => setManualOrderForm({ ...manualOrderForm, phone: event.target.value })}
-              required
-              type="tel"
-              value={manualOrderForm.phone}
-            />
-          </label>
-          <label>
-            ডেলিভারি ঠিকানা *
-            <textarea
-              onChange={(event) => setManualOrderForm({ ...manualOrderForm, deliveryAddress: event.target.value })}
-              required
-              rows="2"
-              value={manualOrderForm.deliveryAddress}
-            />
-          </label>
-          <label>
-            কী কী লাগবে? *
-            <textarea
-              onChange={(event) => setManualOrderForm({ ...manualOrderForm, items: event.target.value })}
-              placeholder="পণ্যের নাম ও পরিমাণ লিখুন"
-              required
-              rows="3"
-              value={manualOrderForm.items}
-            />
-          </label>
-          {manualOrderError && <p className="form-feedback form-error" role="alert">{manualOrderError}</p>}
-          {manualOrderFeedback && <p className="form-feedback form-success" role="status">{manualOrderFeedback}</p>}
-          <button className="button button-primary request-submit" type="submit">অর্ডার পাঠান</button>
-        </form>
+      {displayedType === 'manual-order' && selectedCity && (
+        <div
+          className="manual-order-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setActiveType('product')
+              setActiveCategory('')
+            }
+          }}
+        >
+          <section aria-labelledby="manual-order-title" aria-modal="true" className="manual-order-modal" role="dialog">
+            <button
+              aria-label="ম্যানুয়াল অর্ডার বন্ধ করুন"
+              className="manual-order-close"
+              onClick={() => {
+                setActiveType('product')
+                setActiveCategory('')
+              }}
+              type="button"
+            >
+              ×
+            </button>
+            <h2 id="manual-order-title">ম্যানুয়াল অর্ডার — {selectedCity?.englishName ?? 'সব শহর'}</h2>
+            <form className="listing-request-form manual-order-form" onSubmit={submitManualOrderForm}>
+              <h3>স্থানীয় বাজার থেকে যা কিছু দরকার লিখে দিন। আমাদের টিম ডেলিভারি ম্যানের মাধ্যমে পৌঁছে দেবে।</h3>
+              <label>
+                আপনার নাম *
+                <input
+                  autoComplete="name"
+                  onChange={(event) => setManualOrderForm({ ...manualOrderForm, customerName: event.target.value })}
+                  required
+                  value={manualOrderForm.customerName}
+                />
+              </label>
+              <label>
+                মোবাইল নম্বর *
+                <input
+                  autoComplete="tel"
+                  inputMode="tel"
+                  onChange={(event) => setManualOrderForm({ ...manualOrderForm, phone: event.target.value })}
+                  required
+                  type="tel"
+                  value={manualOrderForm.phone}
+                />
+              </label>
+              <label>
+                ডেলিভারি ঠিকানা *
+                <textarea
+                  onChange={(event) => setManualOrderForm({ ...manualOrderForm, deliveryAddress: event.target.value })}
+                  required
+                  rows="2"
+                  value={manualOrderForm.deliveryAddress}
+                />
+              </label>
+              <label>
+                কী কী লাগবে? *
+                <textarea
+                  onChange={(event) => setManualOrderForm({ ...manualOrderForm, items: event.target.value })}
+                  placeholder="পণ্যের নাম ও পরিমাণ লিখুন"
+                  required
+                  rows="3"
+                  value={manualOrderForm.items}
+                />
+              </label>
+              {manualOrderError && <p className="form-feedback form-error" role="alert">{manualOrderError}</p>}
+              {manualOrderFeedback && <p className="form-feedback form-success" role="status">{manualOrderFeedback}</p>}
+              <button className="button button-primary request-submit" type="submit">অর্ডার পাঠান</button>
+            </form>
+          </section>
+        </div>
       )}
 
       {formOpen && (
@@ -234,7 +271,7 @@ function LocalListingBoard() {
         />
       )}
 
-      {activeType !== 'manual-order' && (
+      {displayedType !== 'manual-order' && (
         <div className="listing-results" aria-live="polite">
         {visibleListings.length > 0 ? visibleListings.map((listing) => (
           <article className="public-listing-card" key={listing.id}>
@@ -242,7 +279,12 @@ function LocalListingBoard() {
             <span className="public-listing-category">{listing.category}</span>
             <h3>{listing.title}</h3>
             <p>{listing.description}</p>
-            {listing.submitterName && <span className="public-listing-owner">{listing.submitterName}</span>}
+            {listing.submitterName && (
+              <span className="public-listing-owner">
+                {listing.ownerImage && <img alt="" src={listing.ownerImage} />}
+                {listing.submitterName}
+              </span>
+            )}
             {listing.type === 'product' && (
               <div className="public-product-details">
                 <strong>৳ {listing.price}</strong>

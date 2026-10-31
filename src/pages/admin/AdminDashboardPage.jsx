@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppData } from '../../context/useAppData.js'
 import { listingTypes } from '../../data/listingCategories.js'
+import BrandLogo from '../../components/BrandLogo.jsx'
 import './AdminDashboardPage.css'
 
 const adminSections = [
@@ -216,7 +217,12 @@ function AdminDashboardPage() {
             )}
             <div className="admin-listing-details">
               <span>{listing.cityName}</span>
-              {listing.submitterName && <span>{listing.submitterName}</span>}
+              {listing.submitterName && (
+                <span className="admin-listing-owner">
+                  {listing.ownerImage && <img alt="" src={listing.ownerImage} />}
+                  {listing.submitterName}
+                </span>
+              )}
               {listing.phone && <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}>{listing.phone}</a>}
               {listing.whatsapp && <a href={`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`} rel="noreferrer" target="_blank">WhatsApp</a>}
               {(listing.mapLink || listing.coordinates) && (
@@ -354,8 +360,7 @@ function AdminDashboardPage() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-sidebar-brand">
-          <span className="admin-sidebar-logo">+</span>
-          <span><strong>সহায়তা</strong><small>ADMIN PANEL</small></span>
+          <BrandLogo subtitle="ADMIN PANEL" />
         </div>
         <span className="admin-sidebar-label">WORKSPACE</span>
         <nav aria-label="অ্যাডমিন ড্যাশবোর্ড" className="admin-sidebar-nav">
@@ -373,10 +378,6 @@ function AdminDashboardPage() {
             </button>
           ))}
         </nav>
-        <div className="admin-sidebar-note">
-          <span>LOCAL DEMO</span>
-          <p>তথ্য এই browser-এ সংরক্ষিত।</p>
-        </div>
       </aside>
 
       <main className="admin-workspace">
@@ -387,7 +388,6 @@ function AdminDashboardPage() {
             <p>পণ্য, সেবা, আবেদন ও শহর পরিচালনা করুন।</p>
           </div>
           <div className="admin-header-actions">
-            <span className="admin-demo-badge">Local demo</span>
             <button className="admin-logout" onClick={signOut} type="button">লগআউট</button>
           </div>
         </header>

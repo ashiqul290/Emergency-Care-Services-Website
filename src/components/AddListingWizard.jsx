@@ -3,8 +3,6 @@ import Icon from './Icon.jsx'
 import { popularCategories, productCategories } from '../data/listingCategories.js'
 import './AddListingWizard.css'
 
-const MAX_IMAGE_SIZE = 500 * 1024
-
 const listingChoices = [
   { id: 'product', title: 'পণ্য', subtitle: 'বিক্রির জন্য পণ্য', icon: 'bag' },
   { id: 'service', title: 'সেবা', subtitle: 'দক্ষতা বা সার্ভিস', icon: 'wrench' },
@@ -16,6 +14,60 @@ const ownerChoices = [
 ]
 
 const steps = ['ধরন', 'যোগাযোগ', 'বিস্তারিত', 'লোকেশন']
+
+async function compressImage(file, maxDimension) {
+  const objectUrl = URL.createObjectURL(file)
+  const image = new Image()
+
+  try {
+    await new Promise((resolve, reject) => {
+      image.onload = resolve
+      image.onerror = () => reject(new Error('ছবিটি খোলা যায়নি।'))
+      image.src = objectUrl
+    })
+
+    const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight))
+    let width = Math.max(1, Math.round(image.naturalWidth * scale))
+    let height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('ছবি প্রক্রিয়াকরণ করা যাচ্ছে না।')
+      context.drawImage(image, 0, 0, width, height)
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (result) => result ? resolve(result) : reject(new Error('ছবিটি কমপ্রেস করা যায়নি।')),
+          'image/webp',
+          Math.max(0.5, 0.78 - attempt * 0.05),
+        )
+      })
+
+      if (blob.size <= 240 * 1024 || attempt === 5) {
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => (
+            typeof reader.result === 'string'
+              ? resolve(reader.result)
+              : reject(new Error('ছবিটি পড়া যায়নি।'))
+          )
+          reader.onerror = () => reject(new Error('ছবিটি পড়া যায়নি।'))
+          reader.readAsDataURL(blob)
+        })
+      }
+
+      width = Math.max(1, Math.round(width * 0.8))
+      height = Math.max(1, Math.round(height * 0.8))
+    }
+
+    throw new Error('ছবিটি কমপ্রেস করা যায়নি।')
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
 
 function AddListingWizard({
   cities,
@@ -43,9 +95,12 @@ function AddListingWizard({
     price: '',
     stock: '',
     image: '',
+    ownerImage: '',
   })
   const [error, setError] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
+  const listingImageInputRef = useRef(null)
+  const ownerImageInputRef = useRef(null)
   const contactFormRef = useRef(null)
   const detailsFormRef = useRef(null)
 
@@ -70,32 +125,25 @@ function AddListingWizard({
     setForm((current) => ({ ...current, [name]: value }))
   }
 
-  function updateImage(event) {
-    const file = event.target.files?.[0]
+  async function updateImage(event, fieldName) {
+    const input = event.currentTarget
+    const file = input.files?.[0]
     if (!file) return
 
     setError('')
     if (!file.type.startsWith('image/')) {
       setError('একটি image file বেছে নিন।')
-      event.target.value = ''
+      input.value = ''
       return
     }
-    if (file.size > MAX_IMAGE_SIZE) {
-      setError('ছবির আকার ৫০০ KB-এর মধ্যে রাখুন।')
-      event.target.value = ''
-      return
+    try {
+      const compressedImage = await compressImage(file, fieldName === 'ownerImage' ? 480 : 1200)
+      setForm((current) => ({ ...current, [fieldName]: compressedImage }))
+    } catch (imageError) {
+      setError(`ছবিটি প্রস্তুত করা যায়নি: ${imageError.message}`)
+    } finally {
+      input.value = ''
     }
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setForm((current) => ({ ...current, image: reader.result }))
-      } else {
-        setError('ছবিটি পড়া যায়নি। আবার চেষ্টা করুন।')
-      }
-    }
-    reader.onerror = () => setError('ছবিটি পড়া যায়নি। আবার চেষ্টা করুন।')
-    reader.readAsDataURL(file)
   }
 
   function addCurrentLocation() {
@@ -296,17 +344,39 @@ function AddListingWizard({
                 value={form.phone}
               />
             </label>
-            <label className="wizard-image-upload">
-              ছবি (ঐচ্ছিক)
-              <input accept="image/*" name="image" onChange={updateImage} type="file" />
-              <small>ছবি আপলোড করুন · সর্বোচ্চ ৫০০ KB</small>
-            </label>
-            {form.image && (
-              <div className="wizard-image-preview">
-                <img alt="আপলোড করা ছবির preview" src={form.image} />
-                <button onClick={() => setForm((current) => ({ ...current, image: '' }))} type="button">ছবি সরান</button>
-              </div>
-            )}
+            <div className="wizard-image-upload">
+              <span>{ownerType === 'company' ? 'কোম্পানির' : 'ব্যক্তির'} ছবি (ঐচ্ছিক)</span>
+              <input
+                accept="image/*"
+                aria-label={`${ownerType === 'company' ? 'কোম্পানির' : 'ব্যক্তির'} ছবি নির্বাচন করুন`}
+                className="wizard-image-input"
+                onChange={(event) => updateImage(event, 'ownerImage')}
+                ref={ownerImageInputRef}
+                type="file"
+              />
+              <button
+                className="wizard-image-button"
+                onClick={() => ownerImageInputRef.current?.click()}
+                type="button"
+              >
+                {form.ownerImage ? 'অন্য ছবি নির্বাচন করুন' : '＋ ছবি নির্বাচন করুন'}
+              </button>
+              <small>আপনার বা প্রতিষ্ঠানের পরিচিতির ছবি যোগ করুন</small>
+              {form.ownerImage && (
+                <div className="wizard-image-preview">
+                  <img alt="ব্যক্তি বা প্রতিষ্ঠানের ছবির preview" src={form.ownerImage} />
+                  <button
+                    onClick={() => {
+                      setForm((current) => ({ ...current, ownerImage: '' }))
+                      if (ownerImageInputRef.current) ownerImageInputRef.current.value = ''
+                    }}
+                    type="button"
+                  >
+                    ছবি সরান
+                  </button>
+                </div>
+              )}
+            </div>
           </form>
         )}
 
@@ -343,6 +413,39 @@ function AddListingWizard({
                 value={form.description}
               />
             </label>
+            <div className="wizard-image-upload">
+              <span>{type === 'product' ? 'পণ্যের' : 'সেবার'} ছবি (ঐচ্ছিক)</span>
+              <input
+                accept="image/*"
+                aria-label={`${type === 'product' ? 'পণ্য' : 'সেবা'}র ছবি নির্বাচন করুন`}
+                className="wizard-image-input"
+                onChange={(event) => updateImage(event, 'image')}
+                ref={listingImageInputRef}
+                type="file"
+              />
+              <button
+                className="wizard-image-button"
+                onClick={() => listingImageInputRef.current?.click()}
+                type="button"
+              >
+                {form.image ? 'অন্য ছবি নির্বাচন করুন' : '＋ ছবি নির্বাচন করুন'}
+              </button>
+              <small>পণ্য বা সেবার জন্য আলাদা ছবি যোগ করুন</small>
+              {form.image && (
+                <div className="wizard-image-preview">
+                  <img alt="পণ্য বা সেবার ছবির preview" src={form.image} />
+                  <button
+                    onClick={() => {
+                      setForm((current) => ({ ...current, image: '' }))
+                      if (listingImageInputRef.current) listingImageInputRef.current.value = ''
+                    }}
+                    type="button"
+                  >
+                    ছবি সরান
+                  </button>
+                </div>
+              )}
+            </div>
             {type === 'product' && (
               <div className="wizard-fields-row">
                 <label>

@@ -198,12 +198,30 @@
   box-shadow: 0 0 0 3px rgba(109, 91, 225, 0.1);
 }
 
-.wizard-step .wizard-image-upload input {
-  min-height: auto;
-  padding: 9px;
-  border-style: dashed;
-  background: #f9f8ff;
+.wizard-image-upload {
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+  color: #46534e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wizard-image-input {
+  display: none;
+}
+
+.wizard-image-button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px dashed #aaa0f3;
+  border-radius: 9px;
+  background: #f7f5ff;
+  color: #6249d2;
   cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .wizard-image-upload small {
