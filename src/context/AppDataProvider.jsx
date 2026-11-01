@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { initialCities } from '../data/cities.js'
 import { emergencyServices as initialEmergencyServices } from '../data/emergencyServices.js'
+import { popularCategories, productCategories } from '../data/listingCategories.js'
 import { AppDataContext } from './appDataContext.js'
 
 const CITIES_KEY = 'city-care-cities'
@@ -15,6 +16,7 @@ const ADMIN_OPERATIONS_KEY = 'city-care-admin-operations'
 const ADMIN_STAFF_KEY = 'city-care-admin-staff'
 const EMERGENCY_SERVICES_KEY = 'city-care-emergency-services'
 const HIDDEN_EMERGENCY_SERVICES_KEY = 'city-care-hidden-emergency-services'
+const LISTING_CATEGORIES_KEY = 'city-care-listing-categories'
 const ALL_CITIES_ID = 'all'
 const SUPERADMIN_EMAIL = 'ashiquldeveloper11@gmail.com'
 const ACCOUNT_ROLES = ['superadmin', 'admin', 'customer', 'provider', 'user']
@@ -28,12 +30,30 @@ function readStoredArray(key, fallback) {
   return Array.isArray(value) ? value : fallback
 }
 
+function readStoredCategories() {
+  const stored = window.localStorage.getItem(LISTING_CATEGORIES_KEY)
+  if (!stored) {
+    return { product: productCategories, service: popularCategories }
+  }
+
+  const value = JSON.parse(stored)
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('সংরক্ষিত ক্যাটাগরির তথ্য সঠিক নয়।')
+  }
+
+  return {
+    product: Array.isArray(value.product) ? value.product : productCategories,
+    service: Array.isArray(value.service) ? value.service : popularCategories,
+  }
+}
+
 export function AppDataProvider({ children }) {
   const [cities, setCities] = useState(() => (
     readStoredArray(CITIES_KEY, initialCities).map((city) => ({ ...city, active: city.active !== false }))
   ))
   const [listings, setListings] = useState(() => readStoredArray(LISTINGS_KEY, []))
   const [requests, setRequests] = useState(() => readStoredArray(REQUESTS_KEY, []))
+  const [categories, setCategories] = useState(readStoredCategories)
   const [emergencyServices, setEmergencyServices] = useState(() => (
     readStoredArray(EMERGENCY_SERVICES_KEY, initialEmergencyServices)
   ))
@@ -116,6 +136,63 @@ export function AppDataProvider({ children }) {
     if (selectedCityId === cityId && updatedCities.length > 0) {
       chooseCity(updatedCities.find((city) => city.active !== false)?.id ?? ALL_CITIES_ID)
     }
+  }
+
+  function addCategory(type, name) {
+    if (!['product', 'service'].includes(type)) throw new Error('একটি বৈধ ক্যাটাগরির ধরন বেছে নিন।')
+    const normalizedName = name.trim()
+    if (!normalizedName) throw new Error('ক্যাটাগরির নাম লিখুন।')
+    if (categories[type].some((category) => category.toLocaleLowerCase() === normalizedName.toLocaleLowerCase())) {
+      throw new Error('এই ক্যাটাগরিটি আগে থেকেই আছে।')
+    }
+
+    const updatedCategories = {
+      ...categories,
+      [type]: [...categories[type], normalizedName],
+    }
+    window.localStorage.setItem(LISTING_CATEGORIES_KEY, JSON.stringify(updatedCategories))
+    setCategories(updatedCategories)
+  }
+
+  function updateCategory(type, currentName, nextName) {
+    if (!['product', 'service'].includes(type)) throw new Error('একটি বৈধ ক্যাটাগরির ধরন বেছে নিন।')
+    const normalizedName = nextName.trim()
+    if (!normalizedName) throw new Error('ক্যাটাগরির নাম লিখুন।')
+    if (!categories[type].includes(currentName)) throw new Error('ক্যাটাগরিটি তালিকায় পাওয়া যায়নি।')
+    if (categories[type].some((category) => (
+      category !== currentName && category.toLocaleLowerCase() === normalizedName.toLocaleLowerCase()
+    ))) {
+      throw new Error('এই নামে আরেকটি ক্যাটাগরি আগে থেকেই আছে।')
+    }
+
+    const updatedCategories = {
+      ...categories,
+      [type]: categories[type].map((category) => category === currentName ? normalizedName : category),
+    }
+    const updatedListings = listings.map((listing) => (
+      listing.type === type && listing.category === currentName
+        ? { ...listing, category: normalizedName }
+        : listing
+    ))
+    window.localStorage.setItem(LISTING_CATEGORIES_KEY, JSON.stringify(updatedCategories))
+    if (updatedListings.some((listing, index) => listing !== listings[index])) {
+      window.localStorage.setItem(LISTINGS_KEY, JSON.stringify(updatedListings))
+      setListings(updatedListings)
+    }
+    setCategories(updatedCategories)
+  }
+
+  function removeCategory(type, name) {
+    if (!['product', 'service'].includes(type)) throw new Error('একটি বৈধ ক্যাটাগরির ধরন বেছে নিন।')
+    if (!categories[type].includes(name)) throw new Error('ক্যাটাগরিটি তালিকায় পাওয়া যায়নি।')
+    if (categories[type].length <= 1) throw new Error('অন্তত একটি ক্যাটাগরি রাখতে হবে।')
+
+    const updatedCategories = {
+      ...categories,
+      [type]: categories[type].filter((category) => category !== name),
+    }
+    window.localStorage.setItem(LISTING_CATEGORIES_KEY, JSON.stringify(updatedCategories))
+    setCategories(updatedCategories)
   }
 
   function addManagedArea(cityId) {
@@ -371,6 +448,7 @@ export function AppDataProvider({ children }) {
     activeCities,
     listings,
     requests,
+    categories,
     emergencyServices,
     managedAreas,
     staffAccounts,
@@ -380,6 +458,9 @@ export function AppDataProvider({ children }) {
     selectedCityId,
     chooseCity,
     addCity,
+    addCategory,
+    updateCategory,
+    removeCategory,
     toggleCityActive,
     removeCity,
     addManagedArea,

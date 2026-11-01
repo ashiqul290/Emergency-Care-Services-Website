@@ -2,14 +2,15 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import AddListingWizard from './AddListingWizard.jsx'
-import { listingTypes, popularCategories, productCategories } from '../data/listingCategories.js'
+import { listingTypes } from '../data/listingCategories.js'
 import { useAppData } from '../context/useAppData.js'
 
 function LocalListingBoard() {
-  const { activeCities, listings, selectedCity, addListing, addRequest, user, profile } = useAppData()
+  const { activeCities, categories, listings, selectedCity, addListing, addRequest, user, profile } = useAppData()
   const navigate = useNavigate()
   const [activeType, setActiveType] = useState('product')
   const [activeCategory, setActiveCategory] = useState('')
+  const [showAllCategories, setShowAllCategories] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [requestingListing, setRequestingListing] = useState(null)
   const [formSuccess, setFormSuccess] = useState('')
@@ -29,17 +30,33 @@ function LocalListingBoard() {
   })
 
   const displayedType = activeType === 'manual-order' && !selectedCity ? 'product' : activeType
-  const visibleListings = useMemo(() => listings.filter((listing) => (
+  const browseListings = useMemo(() => listings.filter((listing) => (
     listing.status === 'approved'
     && (listing.cityId === 'all' || activeCities.some((city) => city.id === listing.cityId))
     && (displayedType === 'company' || displayedType === 'person'
       ? listing.ownerType === displayedType
       : listing.type === displayedType)
     && (!selectedCity || listing.cityId === selectedCity.id || listing.cityId === 'all')
-    && (!activeCategory || listing.category === activeCategory)
-  )), [activeCategory, activeCities, displayedType, listings, selectedCity])
+  )), [activeCities, displayedType, listings, selectedCity])
+  const visibleListings = activeCategory
+    ? browseListings.filter((listing) => listing.category === activeCategory)
+    : browseListings
+  const listingGroups = useMemo(() => {
+    const groups = new Map()
+    visibleListings.forEach((listing) => {
+      const group = groups.get(listing.category) ?? []
+      group.push(listing)
+      groups.set(listing.category, group)
+    })
+    return Array.from(groups, ([category, categoryListings]) => ({ category, listings: categoryListings }))
+  }, [visibleListings])
+  const categoryCounts = useMemo(() => browseListings.reduce((counts, listing) => {
+    counts.set(listing.category, (counts.get(listing.category) ?? 0) + 1)
+    return counts
+  }, new Map()), [browseListings])
 
-  const categories = displayedType === 'product' ? productCategories : popularCategories
+  const availableCategories = categories[displayedType === 'product' ? 'product' : 'service']
+  const shownCategories = showAllCategories ? availableCategories : availableCategories.slice(0, 12)
   const visibleTypes = listingTypes.filter((type) => (
     type.id !== 'manual-order' || selectedCity
   ))
@@ -110,6 +127,104 @@ function LocalListingBoard() {
     }
   }
 
+  function renderListingCard(listing) {
+    return (
+      <article className="public-listing-card" key={listing.id}>
+        {listing.image ? (
+          <img className="public-listing-image" alt={listing.title} src={listing.image} />
+        ) : (
+          <div className="public-listing-image-placeholder" aria-hidden="true">
+            <Icon name="building" size={30} />
+          </div>
+        )}
+        <span className="public-listing-category">{listing.category}</span>
+        <h3>{listing.title}</h3>
+        <p>{listing.description}</p>
+        {listing.submitterName && (
+          <span className="public-listing-owner">
+            {listing.ownerImage && <img alt="" src={listing.ownerImage} />}
+            {listing.submitterName}
+          </span>
+        )}
+        {listing.type === 'product' && (
+          <div className="public-product-details">
+            <strong>৳ {listing.price}</strong>
+            {listing.stock && <span>স্টক: {listing.stock}</span>}
+          </div>
+        )}
+        <div className="public-listing-footer">
+          <span><Icon name="location" size={15} />{listing.cityName}</span>
+          {listing.phone && <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}><Icon name="phone" size={15} />{listing.phone}</a>}
+          {listing.whatsapp && (
+            <a href={`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`} rel="noreferrer" target="_blank">
+              WhatsApp
+            </a>
+          )}
+          {(listing.mapLink || listing.coordinates) && (
+            <a
+              href={listing.mapLink || `https://maps.google.com/?q=${listing.coordinates.latitude},${listing.coordinates.longitude}`}
+              rel="noreferrer"
+              target="_blank"
+            >
+              ম্যাপ দেখুন
+            </a>
+          )}
+        </div>
+        {(listing.type === 'product' || listing.type === 'service') && (
+          <>
+            <button
+              aria-controls={requestingListing?.id === listing.id ? `request-form-${listing.id}` : undefined}
+              aria-expanded={requestingListing?.id === listing.id}
+              className="listing-request-button"
+              onClick={() => {
+                setRequestError('')
+                setRequestingListing(requestingListing?.id === listing.id ? null : listing)
+              }}
+              type="button"
+            >
+              {requestingListing?.id === listing.id ? 'আবেদন বন্ধ করুন' : 'পণ্য / সেবা নিতে আবেদন করুন'}
+            </button>
+            {requestingListing?.id === listing.id && (
+              <form className="listing-request-form" id={`request-form-${listing.id}`} onSubmit={submitRequest}>
+                <h4>আবেদনের তথ্য</h4>
+                <label>
+                  আপনার নাম
+                  <input
+                    autoComplete="name"
+                    onChange={(event) => setRequestForm({ ...requestForm, customerName: event.target.value })}
+                    required
+                    value={requestForm.customerName}
+                  />
+                </label>
+                <label>
+                  যোগাযোগ নম্বর
+                  <input
+                    autoComplete="tel"
+                    inputMode="tel"
+                    onChange={(event) => setRequestForm({ ...requestForm, phone: event.target.value })}
+                    required
+                    type="tel"
+                    value={requestForm.phone}
+                  />
+                </label>
+                <label>
+                  অতিরিক্ত তথ্য <span>(ঐচ্ছিক)</span>
+                  <textarea
+                    onChange={(event) => setRequestForm({ ...requestForm, message: event.target.value })}
+                    rows="2"
+                    value={requestForm.message}
+                  />
+                </label>
+                {requestError && <p className="form-feedback form-error" role="alert">{requestError}</p>}
+                <button className="button button-primary request-submit" type="submit">আবেদন জমা দিন</button>
+              </form>
+            )}
+          </>
+        )}
+      </article>
+    )
+  }
+
   return (
     <section className="listing-board section-wrap">
       <div className="listing-type-tabs" role="group" aria-label="তথ্যের ধরন">
@@ -146,27 +261,48 @@ function LocalListingBoard() {
       </div>
 
       {displayedType !== 'emergency' && displayedType !== 'manual-order' && (
-        <div className="listing-category-tabs" role="group" aria-label="ক্যাটাগরি দিয়ে খুঁজুন">
-          <button
-            aria-pressed={!activeCategory}
-            className={`listing-category-tab${!activeCategory ? ' active' : ''}`}
-            onClick={() => setActiveCategory('')}
-            type="button"
-          >
-            সব
-          </button>
-          {categories.map((category) => (
+        <section className="listing-category-browser" aria-labelledby="listing-categories-title">
+          <div className="listing-category-heading">
+            <div>
+              <span className="section-kicker">আপনার পছন্দের সেবা</span>
+              <h2 id="listing-categories-title">ক্যাটাগরি থেকে খুঁজুন</h2>
+            </div>
+            {availableCategories.length > 12 && (
+              <button
+                className="category-show-more"
+                onClick={() => setShowAllCategories((current) => !current)}
+                type="button"
+              >
+                {showAllCategories ? 'কম দেখুন' : 'সব ক্যাটাগরি দেখুন'}
+              </button>
+            )}
+          </div>
+          <div className="listing-category-grid" role="group" aria-label="ক্যাটাগরি দিয়ে খুঁজুন">
             <button
-              aria-pressed={activeCategory === category}
-              className={`listing-category-tab${activeCategory === category ? ' active' : ''}`}
-              key={category}
-              onClick={() => setActiveCategory(category)}
+              aria-pressed={!activeCategory}
+              className={`listing-category-card category-tone-0${!activeCategory ? ' active' : ''}`}
+              onClick={() => setActiveCategory('')}
               type="button"
             >
-              {category}
+              <span className="category-card-icon" aria-hidden="true"><Icon name="building" size={18} /></span>
+              <strong>সব ক্যাটাগরি</strong>
+              <small>{browseListings.length}টি তথ্য</small>
             </button>
-          ))}
-        </div>
+            {shownCategories.map((category, index) => (
+              <button
+                aria-pressed={activeCategory === category}
+                className={`listing-category-card category-tone-${(index % 6) + 1}${activeCategory === category ? ' active' : ''}`}
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                type="button"
+              >
+                <span className="category-card-icon" aria-hidden="true"><Icon name="bag" size={18} /></span>
+                <strong>{category}</strong>
+                <small>{categoryCounts.get(category) ?? 0}টি তথ্য</small>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       <div className="listing-board-heading">
@@ -276,6 +412,7 @@ function LocalListingBoard() {
 
       {formOpen && (
         <AddListingWizard
+          categories={categories}
           cities={activeCities}
           initialOwnerType={activeType === 'company' || activeType === 'person' ? activeType : 'person'}
           initialType={activeType === 'service' ? 'service' : 'product'}
@@ -287,101 +424,58 @@ function LocalListingBoard() {
 
       {displayedType !== 'manual-order' && (
         <div className="listing-results" aria-live="polite">
-        {visibleListings.length > 0 ? visibleListings.map((listing) => (
-          <article className="public-listing-card" key={listing.id}>
-            {listing.image && <img className="public-listing-image" alt={listing.title} src={listing.image} />}
-            <span className="public-listing-category">{listing.category}</span>
-            <h3>{listing.title}</h3>
-            <p>{listing.description}</p>
-            {listing.submitterName && (
-              <span className="public-listing-owner">
-                {listing.ownerImage && <img alt="" src={listing.ownerImage} />}
-                {listing.submitterName}
-              </span>
-            )}
-            {listing.type === 'product' && (
-              <div className="public-product-details">
-                <strong>৳ {listing.price}</strong>
-                {listing.stock && <span>স্টক: {listing.stock}</span>}
-              </div>
-            )}
-            <div className="public-listing-footer">
-              <span><Icon name="location" size={15} />{listing.cityName}</span>
-              {listing.phone && <a href={`tel:${listing.phone.replace(/[^\d+]/g, '')}`}><Icon name="phone" size={15} />{listing.phone}</a>}
-              {listing.whatsapp && (
-                <a href={`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`} rel="noreferrer" target="_blank">
-                  WhatsApp
-                </a>
-              )}
-              {(listing.mapLink || listing.coordinates) && (
-                <a
-                  href={listing.mapLink || `https://maps.google.com/?q=${listing.coordinates.latitude},${listing.coordinates.longitude}`}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  ম্যাপ দেখুন
-                </a>
-              )}
-            </div>
-            {(listing.type === 'product' || listing.type === 'service') && (
-              <>
-                <button
-                  aria-controls={requestingListing?.id === listing.id ? `request-form-${listing.id}` : undefined}
-                  aria-expanded={requestingListing?.id === listing.id}
-                  className="listing-request-button"
-                  onClick={() => {
-                    setRequestError('')
-                    setRequestingListing(requestingListing?.id === listing.id ? null : listing)
-                  }}
-                  type="button"
-                >
-                  {requestingListing?.id === listing.id ? 'আবেদন বন্ধ করুন' : 'পণ্য / সেবা নিতে আবেদন করুন'}
-                </button>
-                {requestingListing?.id === listing.id && (
-                  <form className="listing-request-form" id={`request-form-${listing.id}`} onSubmit={submitRequest}>
-                    <h4>আবেদনের তথ্য</h4>
-                    <label>
-                      আপনার নাম
-                      <input
-                        autoComplete="name"
-                        onChange={(event) => setRequestForm({ ...requestForm, customerName: event.target.value })}
-                        required
-                        value={requestForm.customerName}
-                      />
-                    </label>
-                    <label>
-                      যোগাযোগ নম্বর
-                      <input
-                        autoComplete="tel"
-                        inputMode="tel"
-                        onChange={(event) => setRequestForm({ ...requestForm, phone: event.target.value })}
-                        required
-                        type="tel"
-                        value={requestForm.phone}
-                      />
-                    </label>
-                    <label>
-                      অতিরিক্ত তথ্য <span>(ঐচ্ছিক)</span>
-                      <textarea
-                        onChange={(event) => setRequestForm({ ...requestForm, message: event.target.value })}
-                        rows="2"
-                        value={requestForm.message}
-                      />
-                    </label>
-                    {requestError && <p className="form-feedback form-error" role="alert">{requestError}</p>}
-                    <button className="button button-primary request-submit" type="submit">আবেদন জমা দিন</button>
-                  </form>
-                )}
-              </>
-            )}
-          </article>
-        )) : (
+          {visibleListings.length === 0 ? (
           <div className="listing-empty">
             <span className="empty-search-icon"><Icon name="location" size={27} /></span>
             <h3>এখনো কোনো তথ্য নেই</h3>
             <p>{selectedCity ? `${selectedCity.name} শহরে` : 'সব শহরে'} প্রথম তথ্যটি যোগ করুন। অ্যাডমিন অনুমোদনের পর এটি এখানে দেখা যাবে।</p>
           </div>
-        )}
+          ) : activeCategory ? (
+            <div className="listing-filtered-grid">{visibleListings.map(renderListingCard)}</div>
+          ) : (
+            listingGroups.map((group, index) => (
+              <section className="listing-shelf" key={group.category}>
+                <header className="listing-shelf-heading">
+                  <div>
+                    <span className={`listing-shelf-icon category-tone-${(index % 6) + 1}`} aria-hidden="true">
+                      <Icon name="building" size={17} />
+                    </span>
+                    <div>
+                      <h3>{group.category}</h3>
+                      <span>{group.listings.length}টি তথ্য পাওয়া গেছে</span>
+                    </div>
+                  </div>
+                  <div className="listing-shelf-actions">
+                    <button
+                      aria-label={`${group.category} ক্যাটাগরির সব তথ্য দেখুন`}
+                      className="listing-shelf-more"
+                      onClick={() => setActiveCategory(group.category)}
+                      type="button"
+                    >
+                      সব দেখুন <Icon name="arrow" size={15} />
+                    </button>
+                    <button
+                      aria-label={`${group.category} তালিকায় আগের তথ্য`}
+                      className="listing-shelf-arrow"
+                      onClick={(event) => event.currentTarget.closest('.listing-shelf').querySelector('.listing-shelf-track')?.scrollBy({ left: -300, behavior: 'smooth' })}
+                      type="button"
+                    >
+                      <span aria-hidden="true">‹</span>
+                    </button>
+                    <button
+                      aria-label={`${group.category} তালিকায় পরের তথ্য`}
+                      className="listing-shelf-arrow"
+                      onClick={(event) => event.currentTarget.closest('.listing-shelf').querySelector('.listing-shelf-track')?.scrollBy({ left: 300, behavior: 'smooth' })}
+                      type="button"
+                    >
+                      <span aria-hidden="true">›</span>
+                    </button>
+                  </div>
+                </header>
+                <div className="listing-shelf-track">{group.listings.map(renderListingCard)}</div>
+              </section>
+            ))
+          )}
         </div>
       )}
     </section>

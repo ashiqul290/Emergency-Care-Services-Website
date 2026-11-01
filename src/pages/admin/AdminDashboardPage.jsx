@@ -11,6 +11,7 @@ const adminSections = [
   { id: 'overview', label: 'ড্যাশবোর্ড', symbol: '▦' },
   { id: 'requests', label: 'Customer requests', symbol: '↗', countKey: 'pendingRequests' },
   { id: 'listings', label: 'তথ্য অনুমোদন', symbol: '▤', countKey: 'pendingListings' },
+  { id: 'categories', label: 'ক্যাটাগরি পরিচালনা', symbol: '◇', countKey: 'categories' },
   { id: 'history', label: 'আবেদনের ইতিহাস', symbol: '◷', countKey: 'completedRequests' },
   { id: 'cities', label: 'শহর পরিচালনা', symbol: '⌖', countKey: 'cities' },
   { id: 'emergency-services', label: 'জরুরি সেবা পরিচালনা', symbol: '☎', countKey: 'emergencyServices' },
@@ -25,12 +26,16 @@ function AdminDashboardPage() {
     activeCities,
     listings,
     requests,
+    categories,
     emergencyServices,
     managedAreas,
     staffAccounts,
     requestOperations,
     hiddenEmergencyServiceIds,
     addCity,
+    addCategory,
+    updateCategory,
+    removeCategory,
     toggleCityActive,
     removeCity,
     addStaffAccount,
@@ -49,6 +54,10 @@ function AdminDashboardPage() {
     logout,
   } = useAppData()
   const [cityForm, setCityForm] = useState({ name: '', englishName: '' })
+  const [categoryType, setCategoryType] = useState('product')
+  const [categoryName, setCategoryName] = useState('')
+  const [editingCategory, setEditingCategory] = useState('')
+  const [categoryEditName, setCategoryEditName] = useState('')
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('overview')
@@ -88,6 +97,7 @@ function AdminDashboardPage() {
     const counts = {
       pendingRequests: pendingRequests.length,
       pendingListings: pendingListings.length,
+      categories: categories.product.length + categories.service.length,
       completedRequests: completedRequests.length,
       cities: activeCities.length,
       emergencyServices: emergencyServices.length,
@@ -148,6 +158,43 @@ function AdminDashboardPage() {
       setFeedback(`${city.name} ${city.active === false ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করা হয়েছে।`)
     } catch (saveError) {
       setError(`শহরের অবস্থা পরিবর্তন করা যায়নি: ${saveError.message}`)
+      setFeedback('')
+    }
+  }
+
+  function submitCategory(event) {
+    event.preventDefault()
+    setError('')
+    setFeedback('')
+    try {
+      addCategory(categoryType, categoryName)
+      setCategoryName('')
+      setFeedback('নতুন ক্যাটাগরি যোগ হয়েছে।')
+    } catch (saveError) {
+      setError(`ক্যাটাগরি যোগ করা যায়নি: ${saveError.message}`)
+    }
+  }
+
+  function saveCategory(category) {
+    try {
+      updateCategory(categoryType, category, categoryEditName)
+      setEditingCategory('')
+      setCategoryEditName('')
+      setError('')
+      setFeedback('ক্যাটাগরির নাম আপডেট হয়েছে।')
+    } catch (saveError) {
+      setError(`ক্যাটাগরি আপডেট করা যায়নি: ${saveError.message}`)
+      setFeedback('')
+    }
+  }
+
+  function deleteCategory(category) {
+    try {
+      removeCategory(categoryType, category)
+      setError('')
+      setFeedback('ক্যাটাগরি মুছে দেওয়া হয়েছে।')
+    } catch (saveError) {
+      setError(`ক্যাটাগরি মুছে ফেলা যায়নি: ${saveError.message}`)
       setFeedback('')
     }
   }
@@ -323,6 +370,104 @@ function AdminDashboardPage() {
     )
   }
 
+  function renderCategories() {
+    const typeCategories = categories[categoryType]
+
+    return (
+      <div className="admin-category-manager">
+        <div className="admin-category-tabs" role="group" aria-label="ক্যাটাগরির ধরন">
+          <button
+            aria-pressed={categoryType === 'product'}
+            className={categoryType === 'product' ? 'active' : ''}
+            onClick={() => {
+              setCategoryType('product')
+              setEditingCategory('')
+            }}
+            type="button"
+          >
+            পণ্যের ক্যাটাগরি <span>{categories.product.length}</span>
+          </button>
+          <button
+            aria-pressed={categoryType === 'service'}
+            className={categoryType === 'service' ? 'active' : ''}
+            onClick={() => {
+              setCategoryType('service')
+              setEditingCategory('')
+            }}
+            type="button"
+          >
+            সেবার ক্যাটাগরি <span>{categories.service.length}</span>
+          </button>
+        </div>
+
+        <form className="admin-category-form" onSubmit={submitCategory}>
+          <label>
+            নতুন ক্যাটাগরির নাম
+            <input
+              onChange={(event) => setCategoryName(event.target.value)}
+              placeholder="যেমন: ফার্মেসি"
+              required
+              value={categoryName}
+            />
+          </label>
+          <button className="admin-approve" type="submit">ক্যাটাগরি যোগ করুন</button>
+        </form>
+
+        <div className="admin-category-list">
+          {typeCategories.map((category) => (
+            <article className="admin-category-row" key={category}>
+              {editingCategory === category ? (
+                <form
+                  className="admin-category-edit"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    saveCategory(category)
+                  }}
+                >
+                  <input
+                    aria-label={`${category} ক্যাটাগরির নতুন নাম`}
+                    autoFocus
+                    onChange={(event) => setCategoryEditName(event.target.value)}
+                    required
+                    value={categoryEditName}
+                  />
+                  <button className="admin-approve" type="submit">সংরক্ষণ</button>
+                  <button
+                    className="admin-category-cancel"
+                    onClick={() => {
+                      setEditingCategory('')
+                      setCategoryEditName('')
+                    }}
+                    type="button"
+                  >
+                    বাতিল
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <strong>{category}</strong>
+                  <div>
+                    <button
+                      className="admin-category-edit-button"
+                      onClick={() => {
+                        setEditingCategory(category)
+                        setCategoryEditName(category)
+                      }}
+                      type="button"
+                    >
+                      পরিবর্তন
+                    </button>
+                    <button className="admin-delete" onClick={() => deleteCategory(category)} type="button">মুছুন</button>
+                  </div>
+                </>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   function renderSection() {
     if (activeSection === 'overview') {
       return (
@@ -407,6 +552,7 @@ function AdminDashboardPage() {
 
     if (activeSection === 'requests') return renderRequestCards(pendingRequests)
     if (activeSection === 'listings') return renderListingCards(pendingListings)
+    if (activeSection === 'categories') return renderCategories()
     if (activeSection === 'history') return renderRequestCards(completedRequests, true)
     if (activeSection === 'cities') return renderCities()
     if (activeSection === 'emergency-services') {
@@ -478,6 +624,7 @@ function AdminDashboardPage() {
               <span className="admin-count">
                 {activeSection === 'requests' && `${pendingRequests.length}টি অপেক্ষায়`}
                 {activeSection === 'listings' && `${pendingListings.length}টি`}
+                {activeSection === 'categories' && `${categories.product.length + categories.service.length}টি`}
                 {activeSection === 'history' && `${completedRequests.length}টি`}
                 {activeSection === 'cities' && `${activeCities.length}/${cities.length}টি সক্রিয়`}
                 {activeSection === 'emergency-services' && `${emergencyServices.length}টি`}

@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
-import { popularCategories, productCategories } from '../data/listingCategories.js'
 import './AddListingWizard.css'
 
 const listingChoices = [
@@ -70,6 +69,7 @@ async function compressImage(file, maxDimension) {
 }
 
 function AddListingWizard({
+  categories,
   cities,
   initialOwnerType = 'person',
   initialType = 'product',
@@ -79,6 +79,7 @@ function AddListingWizard({
 }) {
   const [step, setStep] = useState(1)
   const [type, setType] = useState(initialType)
+  const availableCategories = categories[type]
   const [ownerType, setOwnerType] = useState(initialOwnerType)
   const [cityMode, setCityMode] = useState(selectedCity ? 'specific' : 'all')
   const [citySearch, setCitySearch] = useState('')
@@ -403,7 +404,7 @@ function AddListingWizard({
               ক্যাটাগরি
               <select name="category" onChange={updateField} required value={form.category}>
                 <option value="">{type === 'product' ? 'ক্যাটাগরি বাছাই করুন' : 'ক্যাটাগরি বেছে নিন'}</option>
-                {(type === 'product' ? productCategories : popularCategories).map((category) => (
+                {availableCategories.map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useAppData } from '../context/useAppData.js'
-import { popularCategories } from '../data/listingCategories.js'
 
 function CityCareDirectory() {
-  const { activeCities, chooseCity, selectedCity } = useAppData()
+  const { activeCities, categories: listingCategories, chooseCity, selectedCity } = useAppData()
   const [categorySearch, setCategorySearch] = useState('')
-  const shownCategories = popularCategories.filter((category) => (
+  const categories = [...new Set([...listingCategories.service, ...listingCategories.product])]
+  const shownCategories = categories.filter((category) => (
     category.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase())
   ))
 
