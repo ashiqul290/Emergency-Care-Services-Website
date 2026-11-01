@@ -9,8 +9,14 @@ const requestStatus = {
 }
 
 function CustomerDashboardPage() {
-  const { requests } = useAppData()
-  const sortedRequests = [...requests].sort((first, second) => (
+  const { requests, profile, user } = useAppData()
+  const ownRequests = requests.filter((request) => (
+    profile?.email
+      ? request.submittedByEmail === profile.email
+        || (!request.submittedByEmail && request.submittedBy === user)
+      : Boolean(user && request.submittedBy === user)
+  ))
+  const sortedRequests = [...ownRequests].sort((first, second) => (
     new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()
   ))
 

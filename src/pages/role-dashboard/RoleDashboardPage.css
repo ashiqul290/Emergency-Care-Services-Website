@@ -1,0 +1,169 @@
+.role-dashboard {
+  min-height: calc(100vh - 172px);
+  padding-top: 40px;
+  padding-bottom: 60px;
+}
+
+.role-dashboard-heading,
+.role-dashboard-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.role-dashboard-heading {
+  margin-bottom: 24px;
+}
+
+.role-dashboard-heading h1 {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: clamp(28px, 4vw, 38px);
+  letter-spacing: -1px;
+}
+
+.role-dashboard-heading p,
+.role-dashboard-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.role-dashboard-stats,
+.role-dashboard-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.role-dashboard-stats article,
+.role-dashboard-links a,
+.role-dashboard-panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.role-dashboard-stats article {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.role-dashboard-stats span,
+.role-dashboard-links span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.role-dashboard-stats strong {
+  color: var(--ink);
+  font-size: 27px;
+}
+
+.role-dashboard-links a {
+  display: grid;
+  gap: 7px;
+  padding: 20px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.role-dashboard-links a:hover {
+  border-color: var(--red);
+}
+
+.role-dashboard-panel {
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.role-dashboard-panel-heading {
+  margin-bottom: 14px;
+}
+
+.role-dashboard-panel-heading h2 {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.role-dashboard-list {
+  display: grid;
+  gap: 10px;
+}
+
+.role-dashboard-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.role-dashboard-card h3 {
+  margin: 5px 0;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.role-dashboard-card > div > span {
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.role-dashboard-empty {
+  margin: 0;
+  padding: 20px;
+  border-radius: 10px;
+  background: #f8f9f8;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.role-status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #fff6df;
+  color: #916d17;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.role-status.approved {
+  background: #eaf8ef;
+  color: #28774c;
+}
+
+.role-status.rejected {
+  background: #fff0ed;
+  color: #bd4a42;
+}
+
+@media (max-width: 700px) {
+  .role-dashboard {
+    padding-top: 28px;
+  }
+
+  .role-dashboard-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .role-dashboard-stats,
+  .role-dashboard-links {
+    grid-template-columns: 1fr;
+  }
+
+  .role-dashboard-card {
+    flex-direction: column;
+  }
+}

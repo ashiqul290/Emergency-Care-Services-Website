@@ -20,6 +20,7 @@ const adminSections = [
 function AdminDashboardPage() {
   const navigate = useNavigate()
   const {
+    profile,
     cities,
     listings,
     requests,
@@ -30,11 +31,10 @@ function AdminDashboardPage() {
     hiddenEmergencyServiceIds,
     addCity,
     removeCity,
-    addManagedArea,
-    updateManagedArea,
-    removeManagedArea,
     addStaffAccount,
     removeStaffAccount,
+    accounts,
+    updateAccountRole,
     hideEmergencyService,
     restoreEmergencyService,
     addEmergencyService,
@@ -50,6 +50,10 @@ function AdminDashboardPage() {
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
   const [activeSection, setActiveSection] = useState('overview')
+  const isSuperadmin = profile?.role === 'superadmin'
+  const visibleSections = adminSections.filter((section) => (
+    isSuperadmin || !['cities', 'emergency-services'].includes(section.id)
+  ))
 
   const pendingListings = listings.filter((listing) => listing.status === 'pending')
   const approvedListings = listings.filter((listing) => listing.status === 'approved')
@@ -363,19 +367,18 @@ function AdminDashboardPage() {
               </div>
             </section>
           </div>
-          <AdminOperationsOverview
-            addManagedArea={addManagedArea}
-            addStaffAccount={addStaffAccount}
-            cities={cities}
-            listings={listings}
-            managedAreas={managedAreas}
-            removeManagedArea={removeManagedArea}
-            removeStaffAccount={removeStaffAccount}
-            requestOperations={requestOperations}
-            requests={requests}
-            staffAccounts={staffAccounts}
-            updateManagedArea={updateManagedArea}
-          />
+          {isSuperadmin && (
+            <AdminOperationsOverview
+              accounts={accounts}
+              addStaffAccount={addStaffAccount}
+              listings={listings}
+              removeStaffAccount={removeStaffAccount}
+              requestOperations={requestOperations}
+              requests={requests}
+              staffAccounts={staffAccounts}
+              updateAccountRole={updateAccountRole}
+            />
+          )}
         </>
       )
     }
@@ -400,7 +403,7 @@ function AdminDashboardPage() {
     return renderListingCards(approvedListings, true)
   }
 
-  const activeSectionInfo = adminSections.find((section) => section.id === activeSection)
+  const activeSectionInfo = visibleSections.find((section) => section.id === activeSection)
 
   return (
     <div className="admin-layout">
@@ -410,7 +413,7 @@ function AdminDashboardPage() {
         </div>
         <span className="admin-sidebar-label">WORKSPACE</span>
         <nav aria-label="অ্যাডমিন ড্যাশবোর্ড" className="admin-sidebar-nav">
-          {adminSections.map((section) => (
+          {visibleSections.map((section) => (
             <button
               aria-current={activeSection === section.id ? 'page' : undefined}
               className={`admin-sidebar-link${activeSection === section.id ? ' active' : ''}`}

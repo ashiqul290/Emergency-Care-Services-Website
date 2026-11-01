@@ -15,9 +15,12 @@ function HeroSection() {
           আপনার জরুরি সহায়তা পেতে নিচের নির্দেশনা অনুসরণ করুন।
         </p>
         <div className="hero-actions">
-          <a className="button button-primary" href="tel:999">
+          <a
+            className="button button-primary"
+            href="tel:01907968086"
+          >
             <Icon name="phone" size={18} />
-            ৯৯৯-এ কল করুন
+            01907-968086 নম্বরে কল করুন
           </a>
           <Link className="button button-secondary" to="/emergency-services">
             জরুরি নম্বর দেখুন

@@ -855,38 +855,18 @@
   font-weight: 700;
 }
 
-.ops-area-list,
 .ops-provider-list,
 .ops-staff-list {
   display: grid;
   gap: 8px;
 }
 
-.ops-area-row {
-  display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(145px, 0.7fr) minmax(170px, 1.2fr) auto auto;
-  align-items: center;
-  gap: 10px;
-  padding: 11px;
-  border: 1px solid #e7ece8;
-  border-radius: 10px;
-}
-
-.ops-area-name {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.ops-area-name strong,
 .ops-staff-list strong,
 .ops-provider-list strong {
   color: var(--ink);
   font-size: 0.9375rem;
 }
 
-.ops-area-name span,
-.ops-area-name small,
 .ops-staff-list span,
 .ops-provider-list span {
   color: var(--muted);
@@ -894,7 +874,6 @@
   overflow-wrap: anywhere;
 }
 
-.ops-area-row label,
 .ops-staff-form label,
 .ops-request-details header label,
 .ops-field {
@@ -906,7 +885,6 @@
   font-weight: 700;
 }
 
-.ops-area-row :is(input, select),
 .ops-staff-form :is(input, select),
 .ops-request-details select,
 .ops-filter select,
@@ -992,15 +970,6 @@
   color: #9c3d37;
 }
 
-.ops-area-finder {
-  display: grid;
-  gap: 11px;
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-
-.ops-area-finder h3,
 .ops-staff-form h3,
 .ops-service-card h3,
 .ops-request-details h3,
@@ -1010,88 +979,10 @@
   font-size: 1.05rem;
 }
 
-.ops-mode-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.ops-mode-tabs button {
-  min-height: 40px;
-  border: 1px solid #dce4df;
-  border-radius: 8px;
-  background: white;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.ops-mode-tabs button.active {
-  border-color: #17684f;
-  background: #eef7f2;
-  color: #145a43;
-}
-
-.ops-search-field input,
-.ops-area-select select {
-  width: 100%;
-  min-height: 43px;
-  padding: 9px 12px;
-  border: 1px solid #17684f;
-  border-radius: 8px;
-  background: white;
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.9375rem;
-}
-
-.ops-city-results {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.ops-city-results button {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-  padding: 8px;
-  border: 1px solid #e5ebe7;
-  border-radius: 7px;
-  background: white;
-  color: var(--ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.875rem;
-  text-align: left;
-}
-
-.ops-city-results button.selected {
-  border-color: #17684f;
-  background: #eef7f2;
-}
-
-.ops-city-results button:disabled {
-  cursor: default;
-  opacity: 0.65;
-}
-
-.ops-city-results small {
-  color: var(--muted);
-  font-size: 0.8125rem;
-}
-
-.ops-area-tools,
 .ops-form-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.ops-area-tools .ops-primary-button {
-  min-width: 200px;
 }
 
 .ops-access-grid {
@@ -1594,32 +1485,9 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .ops-area-row {
-    grid-template-columns: minmax(120px, 1fr) minmax(140px, 0.8fr) minmax(160px, 1.2fr) auto;
-  }
-
-  .ops-area-row .ops-icon-button {
-    grid-column: 4;
-  }
-
-  .ops-city-results {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
-  .ops-area-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .ops-area-name {
-    grid-column: 1 / -1;
-  }
-
-  .ops-area-row .ops-icon-button {
-    grid-column: auto;
-  }
-
   .ops-access-grid,
   .ops-live-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1646,19 +1514,6 @@
     flex-direction: column;
   }
 
-  .ops-area-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ops-area-name {
-    grid-column: auto;
-  }
-
-  .ops-area-row .ops-icon-button {
-    grid-column: auto;
-  }
-
-  .ops-city-results,
   .ops-service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

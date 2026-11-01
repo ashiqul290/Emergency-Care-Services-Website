@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAppData } from '../context/useAppData.js'
 import LoginDialog from './LoginDialog.jsx'
 
 function AdminRoute({ children }) {
-  const { user, login } = useAppData()
+  const { user, profile, login } = useAppData()
   const [loginOpen, setLoginOpen] = useState(false)
 
   if (!user) {
@@ -24,6 +24,15 @@ function AdminRoute({ children }) {
         {loginOpen && <LoginDialog onClose={() => setLoginOpen(false)} onLogin={login} />}
       </section>
     )
+  }
+
+  if (!['admin', 'superadmin'].includes(profile?.role)) {
+    const destinations = {
+      customer: '/my-requests',
+      provider: '/provider',
+      user: '/user-dashboard',
+    }
+    return <Navigate replace to={destinations[profile?.role] ?? '/'} />
   }
 
   return children

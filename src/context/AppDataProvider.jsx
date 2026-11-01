@@ -9,12 +9,16 @@ const REQUESTS_KEY = 'city-care-requests'
 const SELECTED_CITY_KEY = 'city-care-selected-city'
 const DEMO_USER_KEY = 'city-care-demo-user'
 const DEMO_PROFILE_KEY = 'city-care-demo-profile'
+const DEMO_ACCOUNTS_KEY = 'city-care-demo-accounts'
 const ADMIN_AREAS_KEY = 'city-care-admin-areas'
 const ADMIN_OPERATIONS_KEY = 'city-care-admin-operations'
 const ADMIN_STAFF_KEY = 'city-care-admin-staff'
 const EMERGENCY_SERVICES_KEY = 'city-care-emergency-services'
 const HIDDEN_EMERGENCY_SERVICES_KEY = 'city-care-hidden-emergency-services'
 const ALL_CITIES_ID = 'all'
+const SUPERADMIN_EMAIL = 'ashiquldeveloper11@gmail.com'
+const ACCOUNT_ROLES = ['superadmin', 'admin', 'customer', 'provider', 'user']
+const SIGNUP_ROLES = ['customer', 'provider', 'user']
 
 function readStoredArray(key, fallback) {
   const stored = window.localStorage.getItem(key)
@@ -46,11 +50,17 @@ export function AppDataProvider({ children }) {
     window.localStorage.getItem(SELECTED_CITY_KEY) || 'dhaka'
   ))
   const [user, setUser] = useState(() => window.localStorage.getItem(DEMO_USER_KEY))
+  const [accounts, setAccounts] = useState(() => readStoredArray(DEMO_ACCOUNTS_KEY, []))
   const [profile, setProfile] = useState(() => {
     const storedProfile = window.localStorage.getItem(DEMO_PROFILE_KEY)
     if (storedProfile) {
       const value = JSON.parse(storedProfile)
-      if (value && typeof value.email === 'string') return value
+      if (value && typeof value.email === 'string') {
+        return {
+          ...value,
+          role: value.role ?? (value.email.toLowerCase() === SUPERADMIN_EMAIL ? 'superadmin' : 'user'),
+        }
+      }
     }
 
     const storedUser = window.localStorage.getItem(DEMO_USER_KEY)
@@ -59,6 +69,7 @@ export function AppDataProvider({ children }) {
       name: storedUser.includes('@') ? '' : storedUser,
       email: storedUser.includes('@') ? storedUser : '',
       image: '',
+      role: storedUser.toLowerCase() === SUPERADMIN_EMAIL ? 'superadmin' : 'user',
     }
   })
 
@@ -257,19 +268,31 @@ export function AppDataProvider({ children }) {
     setRequests(updatedRequests)
   }
 
-  function login(email, displayName = '') {
+  function login(email, displayName = '', requestedRole) {
     const normalizedEmail = email.trim().toLowerCase()
-    const signedInAs = displayName || normalizedEmail
-    const savedProfile = window.localStorage.getItem(DEMO_PROFILE_KEY)
-    const existingProfile = savedProfile ? JSON.parse(savedProfile) : null
-    const matchingProfile = existingProfile?.email === normalizedEmail ? existingProfile : null
+    const existingAccount = accounts.find((account) => account.email === normalizedEmail)
+    const role = normalizedEmail === SUPERADMIN_EMAIL
+      ? 'superadmin'
+      : SIGNUP_ROLES.includes(requestedRole)
+        ? requestedRole
+        : ACCOUNT_ROLES.includes(existingAccount?.role)
+          ? existingAccount.role
+          : 'user'
     const nextProfile = {
-      name: displayName || matchingProfile?.name || '',
+      name: displayName || existingAccount?.name || '',
       email: normalizedEmail,
-      image: matchingProfile?.image || '',
+      image: existingAccount?.image || '',
+      role,
     }
+    const updatedAccounts = [
+      ...accounts.filter((account) => account.email !== normalizedEmail),
+      nextProfile,
+    ]
+    const signedInAs = nextProfile.name || normalizedEmail
+    window.localStorage.setItem(DEMO_ACCOUNTS_KEY, JSON.stringify(updatedAccounts))
     window.localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(nextProfile))
     window.localStorage.setItem(DEMO_USER_KEY, signedInAs)
+    setAccounts(updatedAccounts)
     setUser(signedInAs)
     setProfile(nextProfile)
   }
@@ -282,10 +305,39 @@ export function AppDataProvider({ children }) {
       name: details.name.trim(),
       email: details.email.trim().toLowerCase(),
     }
+    const updatedAccounts = [
+      ...accounts.filter((account) => account.email !== profile.email && account.email !== updatedProfile.email),
+      updatedProfile,
+    ]
+    window.localStorage.setItem(DEMO_ACCOUNTS_KEY, JSON.stringify(updatedAccounts))
     window.localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(updatedProfile))
     window.localStorage.setItem(DEMO_USER_KEY, updatedProfile.name || updatedProfile.email)
+    setAccounts(updatedAccounts)
     setUser(updatedProfile.name || updatedProfile.email)
     setProfile(updatedProfile)
+  }
+
+  function updateAccountRole(email, role) {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!['admin', 'customer', 'provider', 'user'].includes(role)) {
+      throw new Error('বৈধ অ্যাকাউন্টের ধরন বেছে নিন।')
+    }
+    if (normalizedEmail === SUPERADMIN_EMAIL) {
+      throw new Error('প্রধান সুপার অ্যাডমিন অ্যাকাউন্টের role পরিবর্তন করা যাবে না।')
+    }
+
+    const account = accounts.find((item) => item.email === normalizedEmail)
+    if (!account) throw new Error('এই ইমেইলের কোনো demo account পাওয়া যায়নি।')
+    const updatedAccounts = accounts.map((item) => (
+      item.email === normalizedEmail ? { ...item, role } : item
+    ))
+    window.localStorage.setItem(DEMO_ACCOUNTS_KEY, JSON.stringify(updatedAccounts))
+    setAccounts(updatedAccounts)
+    if (profile?.email === normalizedEmail) {
+      const updatedProfile = { ...profile, role }
+      window.localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(updatedProfile))
+      setProfile(updatedProfile)
+    }
   }
 
   function logout() {
@@ -327,8 +379,10 @@ export function AppDataProvider({ children }) {
     removeRequest,
     user,
     profile,
+    accounts,
     login,
     updateProfile,
+    updateAccountRole,
     logout,
   }
 

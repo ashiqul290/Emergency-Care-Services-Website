@@ -6,7 +6,7 @@ import { listingTypes, popularCategories, productCategories } from '../data/list
 import { useAppData } from '../context/useAppData.js'
 
 function LocalListingBoard() {
-  const { cities, listings, selectedCity, addListing, addRequest, user } = useAppData()
+  const { cities, listings, selectedCity, addListing, addRequest, user, profile } = useAppData()
   const navigate = useNavigate()
   const [activeType, setActiveType] = useState('product')
   const [activeCategory, setActiveCategory] = useState('')
@@ -45,7 +45,7 @@ function LocalListingBoard() {
 
   function submitListing(listing) {
     setFormSuccess('')
-    addListing(listing)
+    addListing({ ...listing, ownerEmail: profile?.email ?? '', submittedBy: user ?? '' })
     setFormOpen(false)
     setFormSuccess('আপনার তথ্য জমা হয়েছে। প্রকাশের আগে অ্যাডমিন অনুমোদন করবেন।')
   }
@@ -67,6 +67,7 @@ function LocalListingBoard() {
         phone: requestForm.phone.trim(),
         message: requestForm.message.trim(),
         submittedBy: user ?? '',
+        submittedByEmail: profile?.email ?? '',
       })
       setRequestingListing(null)
       setRequestForm({ customerName: user ?? '', phone: '', message: '' })
@@ -94,6 +95,7 @@ function LocalListingBoard() {
         deliveryAddress: manualOrderForm.deliveryAddress.trim(),
         message: manualOrderForm.items.trim(),
         submittedBy: user ?? '',
+        submittedByEmail: profile?.email ?? '',
       })
       setManualOrderForm({
         customerName: user ?? '',

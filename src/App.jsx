@@ -9,6 +9,8 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
 import CustomerDashboardPage from './pages/customer-dashboard/CustomerDashboardPage.jsx'
 import ProfilePage from './pages/profile/ProfilePage.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
+import RoleRoute from './components/RoleRoute.jsx'
+import RoleDashboardPage from './pages/role-dashboard/RoleDashboardPage.jsx'
 import './App.css'
 
 function App() {
@@ -33,6 +35,22 @@ function App() {
             )}
           />
           <Route path="/my-requests" element={<CustomerDashboardPage />} />
+          <Route
+            path="/provider"
+            element={(
+              <RoleRoute role="provider">
+                <RoleDashboardPage role="provider" />
+              </RoleRoute>
+            )}
+          />
+          <Route
+            path="/user-dashboard"
+            element={(
+              <RoleRoute role="user">
+                <RoleDashboardPage role="user" />
+              </RoleRoute>
+            )}
+          />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

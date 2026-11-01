@@ -6,9 +6,15 @@ function LoginDialog({ onClose, onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState('customer')
   const [error, setError] = useState('')
 
   const isSignup = mode === 'signup'
+  const accountRoles = [
+    { value: 'customer', label: 'কাস্টমার' },
+    { value: 'provider', label: 'প্রোভাইডার' },
+    { value: 'user', label: 'সাধারণ ব্যবহারকারী' },
+  ]
 
   function submitAccount(event) {
     event.preventDefault()
@@ -20,7 +26,7 @@ function LoginDialog({ onClose, onLogin }) {
     }
 
     try {
-      onLogin(email.trim(), isSignup ? name.trim() : '')
+      onLogin(email.trim(), isSignup ? name.trim() : '', isSignup ? role : undefined)
       onClose()
     } catch (loginError) {
       setError(`${isSignup ? 'অ্যাকাউন্ট তৈরি' : 'লগইন'} করা যায়নি: ${loginError.message}`)
@@ -97,6 +103,16 @@ function LoginDialog({ onClose, onLogin }) {
               />
             </label>
           )}
+          {isSignup && (
+            <label>
+              অ্যাকাউন্টের ধরন
+              <select onChange={(event) => setRole(event.target.value)} value={role}>
+                {accountRoles.map((accountRole) => (
+                  <option key={accountRole.value} value={accountRole.value}>{accountRole.label}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             ইমেইল
             <input
@@ -141,7 +157,7 @@ function LoginDialog({ onClose, onLogin }) {
         </form>
 
         <p className="login-demo-note">
-          ডেমো অ্যাকাউন্ট: সার্ভারে কোনো তথ্য পাঠানো বা পাসওয়ার্ড সংরক্ষণ করা হয় না।
+          এটি frontend demo: role শুধু এই ব্রাউজারে সংরক্ষিত হয়। Backend authentication না থাকায় role বাছাই কোনো নিরাপত্তা নিয়ন্ত্রণ নয়; পাসওয়ার্ড সংরক্ষণ করা হয় না।
         </p>
       </section>
     </div>
