@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppData } from '../../context/useAppData.js'
 import { listingTypes } from '../../data/listingCategories.js'
 import BrandLogo from '../../components/BrandLogo.jsx'
@@ -22,6 +22,7 @@ function AdminDashboardPage() {
   const {
     profile,
     cities,
+    activeCities,
     listings,
     requests,
     emergencyServices,
@@ -30,6 +31,7 @@ function AdminDashboardPage() {
     requestOperations,
     hiddenEmergencyServiceIds,
     addCity,
+    toggleCityActive,
     removeCity,
     addStaffAccount,
     removeStaffAccount,
@@ -87,7 +89,7 @@ function AdminDashboardPage() {
       pendingRequests: pendingRequests.length,
       pendingListings: pendingListings.length,
       completedRequests: completedRequests.length,
-      cities: cities.length,
+      cities: activeCities.length,
       emergencyServices: emergencyServices.length,
       approvedListings: approvedListings.length,
     }
@@ -136,6 +138,17 @@ function AdminDashboardPage() {
       setFeedback(`${city.name} তালিকা থেকে মুছে দেওয়া হয়েছে।`)
     } catch (saveError) {
       setError(`শহর মুছে ফেলা যায়নি: ${saveError.message}`)
+    }
+  }
+
+  function changeCityStatus(city) {
+    try {
+      toggleCityActive(city.id)
+      setError('')
+      setFeedback(`${city.name} ${city.active === false ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করা হয়েছে।`)
+    } catch (saveError) {
+      setError(`শহরের অবস্থা পরিবর্তন করা যায়নি: ${saveError.message}`)
+      setFeedback('')
     }
   }
 
@@ -293,6 +306,15 @@ function AdminDashboardPage() {
           {cities.map((city) => (
             <div className="admin-city-row" key={city.id}>
               <span>{city.name} <small>{city.englishName}</small></span>
+              <button
+                aria-label={`${city.name} ${city.active === false ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করুন`}
+                aria-pressed={city.active !== false}
+                className={`admin-city-status${city.active === false ? ' is-inactive' : ''}`}
+                onClick={() => changeCityStatus(city)}
+                type="button"
+              >
+                {city.active === false ? 'নিষ্ক্রিয়' : 'সক্রিয়'}
+              </button>
               <button aria-label={`${city.name} মুছুন`} className="admin-delete" onClick={() => deleteCity(city)} type="button">মুছুন</button>
             </div>
           ))}
@@ -306,7 +328,7 @@ function AdminDashboardPage() {
       return (
         <>
           <section className="admin-stats" aria-label="তথ্যের সারাংশ">
-            <div><span>মোট শহর</span><strong>{cities.length}</strong><small>সক্রিয় location</small></div>
+            <div><span>সক্রিয় শহর</span><strong>{activeCities.length}</strong><small>frontend-এ দৃশ্যমান</small></div>
             <div><span>নতুন customer requests</span><strong>{pendingRequests.length}</strong><small>অনুমোদনের অপেক্ষায়</small></div>
             <div><span>অনুমোদনের অপেক্ষায়</span><strong>{pendingListings.length}</strong><small>নতুন listing</small></div>
             <div><span>প্রকাশিত তথ্য</span><strong>{approvedListings.length}</strong><small>সবার জন্য দৃশ্যমান</small></div>
@@ -409,7 +431,9 @@ function AdminDashboardPage() {
     <div className="admin-layout">
       <aside aria-label="অ্যাডমিন সাইডবার" className="admin-sidebar">
         <div className="admin-sidebar-brand">
-          <BrandLogo subtitle="ADMIN PANEL" />
+          <Link aria-label="হোম পেজে যান" to="/">
+            <BrandLogo subtitle="ADMIN PANEL" />
+          </Link>
         </div>
         <span className="admin-sidebar-label">WORKSPACE</span>
         <nav aria-label="অ্যাডমিন ড্যাশবোর্ড" className="admin-sidebar-nav">
@@ -455,7 +479,7 @@ function AdminDashboardPage() {
                 {activeSection === 'requests' && `${pendingRequests.length}টি অপেক্ষায়`}
                 {activeSection === 'listings' && `${pendingListings.length}টি`}
                 {activeSection === 'history' && `${completedRequests.length}টি`}
-                {activeSection === 'cities' && `${cities.length}টি`}
+                {activeSection === 'cities' && `${activeCities.length}/${cities.length}টি সক্রিয়`}
                 {activeSection === 'emergency-services' && `${emergencyServices.length}টি`}
                 {activeSection === 'published' && `${approvedListings.length}টি`}
               </span>

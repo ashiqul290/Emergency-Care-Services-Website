@@ -6,7 +6,7 @@ import { listingTypes, popularCategories, productCategories } from '../data/list
 import { useAppData } from '../context/useAppData.js'
 
 function LocalListingBoard() {
-  const { cities, listings, selectedCity, addListing, addRequest, user, profile } = useAppData()
+  const { activeCities, listings, selectedCity, addListing, addRequest, user, profile } = useAppData()
   const navigate = useNavigate()
   const [activeType, setActiveType] = useState('product')
   const [activeCategory, setActiveCategory] = useState('')
@@ -31,12 +31,13 @@ function LocalListingBoard() {
   const displayedType = activeType === 'manual-order' && !selectedCity ? 'product' : activeType
   const visibleListings = useMemo(() => listings.filter((listing) => (
     listing.status === 'approved'
+    && (listing.cityId === 'all' || activeCities.some((city) => city.id === listing.cityId))
     && (displayedType === 'company' || displayedType === 'person'
       ? listing.ownerType === displayedType
       : listing.type === displayedType)
     && (!selectedCity || listing.cityId === selectedCity.id || listing.cityId === 'all')
     && (!activeCategory || listing.category === activeCategory)
-  )), [activeCategory, displayedType, listings, selectedCity])
+  )), [activeCategory, activeCities, displayedType, listings, selectedCity])
 
   const categories = displayedType === 'product' ? productCategories : popularCategories
   const visibleTypes = listingTypes.filter((type) => (
@@ -275,7 +276,7 @@ function LocalListingBoard() {
 
       {formOpen && (
         <AddListingWizard
-          cities={cities}
+          cities={activeCities}
           initialOwnerType={activeType === 'company' || activeType === 'person' ? activeType : 'person'}
           initialType={activeType === 'service' ? 'service' : 'product'}
           onClose={() => setFormOpen(false)}

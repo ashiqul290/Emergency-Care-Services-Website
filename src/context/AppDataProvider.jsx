@@ -29,7 +29,9 @@ function readStoredArray(key, fallback) {
 }
 
 export function AppDataProvider({ children }) {
-  const [cities, setCities] = useState(() => readStoredArray(CITIES_KEY, initialCities))
+  const [cities, setCities] = useState(() => (
+    readStoredArray(CITIES_KEY, initialCities).map((city) => ({ ...city, active: city.active !== false }))
+  ))
   const [listings, setListings] = useState(() => readStoredArray(LISTINGS_KEY, []))
   const [requests, setRequests] = useState(() => readStoredArray(REQUESTS_KEY, []))
   const [emergencyServices, setEmergencyServices] = useState(() => (
@@ -73,9 +75,10 @@ export function AppDataProvider({ children }) {
     }
   })
 
+  const activeCities = cities.filter((city) => city.active !== false)
   const selectedCity = selectedCityId === ALL_CITIES_ID
     ? null
-    : cities.find((city) => city.id === selectedCityId) ?? cities[0]
+    : activeCities.find((city) => city.id === selectedCityId) ?? activeCities[0] ?? null
 
   function chooseCity(cityId) {
     window.localStorage.setItem(SELECTED_CITY_KEY, cityId)
@@ -83,9 +86,26 @@ export function AppDataProvider({ children }) {
   }
 
   function addCity(city) {
-    const updatedCities = [...cities, city]
+    const updatedCities = [...cities, { ...city, active: true }]
     window.localStorage.setItem(CITIES_KEY, JSON.stringify(updatedCities))
     setCities(updatedCities)
+  }
+
+  function toggleCityActive(cityId) {
+    const city = cities.find((item) => item.id === cityId)
+    if (!city) throw new Error('শহরটি তালিকায় পাওয়া যায়নি।')
+
+    const active = city.active === false
+    const updatedCities = cities.map((item) => (
+      item.id === cityId ? { ...item, active } : item
+    ))
+    window.localStorage.setItem(CITIES_KEY, JSON.stringify(updatedCities))
+    setCities(updatedCities)
+
+    if (!active && selectedCityId === cityId) {
+      const nextActiveCity = updatedCities.find((item) => item.active !== false)
+      chooseCity(nextActiveCity?.id ?? ALL_CITIES_ID)
+    }
   }
 
   function removeCity(cityId) {
@@ -94,7 +114,7 @@ export function AppDataProvider({ children }) {
     window.localStorage.setItem(CITIES_KEY, JSON.stringify(updatedCities))
     setCities(updatedCities)
     if (selectedCityId === cityId && updatedCities.length > 0) {
-      chooseCity(updatedCities[0].id)
+      chooseCity(updatedCities.find((city) => city.active !== false)?.id ?? ALL_CITIES_ID)
     }
   }
 
@@ -348,6 +368,7 @@ export function AppDataProvider({ children }) {
 
   const value = {
     cities,
+    activeCities,
     listings,
     requests,
     emergencyServices,
@@ -359,6 +380,7 @@ export function AppDataProvider({ children }) {
     selectedCityId,
     chooseCity,
     addCity,
+    toggleCityActive,
     removeCity,
     addManagedArea,
     updateManagedArea,

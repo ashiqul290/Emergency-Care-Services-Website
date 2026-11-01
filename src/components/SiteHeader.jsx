@@ -22,13 +22,13 @@ const roleLabels = {
 }
 
 function SiteHeader() {
-  const { cities, selectedCity, chooseCity, user, profile, accounts, login, logout } = useAppData()
+  const { activeCities, selectedCity, chooseCity, user, profile, accounts, login, logout } = useAppData()
   const navigate = useNavigate()
   const [citySearch, setCitySearch] = useState('')
   const [loginOpen, setLoginOpen] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
-  const filteredCities = cities.filter((city) => (
+  const filteredCities = activeCities.filter((city) => (
     `${city.name} ${city.englishName}`.toLocaleLowerCase().includes(citySearch.trim().toLocaleLowerCase())
   ))
 

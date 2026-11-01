@@ -3,7 +3,7 @@ import { useAppData } from '../context/useAppData.js'
 import { popularCategories } from '../data/listingCategories.js'
 
 function CityCareDirectory() {
-  const { cities, chooseCity, selectedCity } = useAppData()
+  const { activeCities, chooseCity, selectedCity } = useAppData()
   const [categorySearch, setCategorySearch] = useState('')
   const shownCategories = popularCategories.filter((category) => (
     category.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase())
@@ -21,7 +21,7 @@ function CityCareDirectory() {
         <div className="directory-block">
           <h3>সব শহর ও জেলা</h3>
           <div className="city-chip-list">
-            {cities.map((city) => (
+            {activeCities.map((city) => (
               <button
                 className={`directory-chip${city.id === selectedCity?.id ? ' active' : ''}`}
                 key={city.id}
