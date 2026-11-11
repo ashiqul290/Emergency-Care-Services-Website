@@ -31,7 +31,7 @@ export const emergencyServices = [
     id: 'children',
     category: 'শিশু সহায়তা',
     title: 'চাইল্ড হেল্পলাইন',
-    description: 'শিশুদের সুরক্ষা ও সহায়তার জন্য যোগাযোগ করুন।',
+    description: 'শিশুদের সুরক্ষা ও সহায়তার জন্য যোগাযোগ করুন',
     number: '১০৯৮',
     dialNumber: '1098',
     icon: 'child',
