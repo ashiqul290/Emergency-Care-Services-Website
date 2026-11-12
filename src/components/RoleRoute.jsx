@@ -22,7 +22,7 @@ function RoleRoute({ children, role }) {
           <span className="login-dialog-mark" aria-hidden="true">+</span>
           <span className="section-kicker">অ্যাকাউন্ট প্রয়োজন</span>
           <h1>ড্যাশবোর্ড দেখতে লগইন করুন</h1>
-          <p>আপনার অ্যাকাউন্টের ধরন অনুযায়ী সঠিক ড্যাশবোর্ড দেখানো হবে।</p>
+          <p>আপনার অ্যাকাউন্টের ধরন অনুযায়ী সঠিক ড্যাশবোর্ড দেখানো হবে</p>
           <button className="button button-primary" onClick={() => setLoginOpen(true)} type="button">
             লগইন করুন
           </button>
