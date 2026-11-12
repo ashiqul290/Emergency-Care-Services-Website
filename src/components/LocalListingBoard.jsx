@@ -65,7 +65,7 @@ function LocalListingBoard() {
     setFormSuccess('')
     addListing({ ...listing, ownerEmail: profile?.email ?? '', submittedBy: user ?? '' })
     setFormOpen(false)
-    setFormSuccess('আপনার তথ্য জমা হয়েছে। প্রকাশের আগে অ্যাডমিন অনুমোদন করবেন।')
+    setFormSuccess('আপনার তথ্য জমা হয়েছে। প্রকাশের আগে অ্যাডমিন অনুমোদন করবেন')
   }
 
   function submitRequest(event) {
